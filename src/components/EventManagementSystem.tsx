@@ -15,7 +15,7 @@ import {
   fetchDemands, createDemand, updateDemand, deleteDemand,
   fetchCRMRecords, createCRMRecord, updateCRMRecord, deleteCRMRecord,
   fetchNotes, createNote, updateNote, deleteNote,
-  setupRealtimeSubscriptions
+  setupRealtimeSubscriptions, invalidateCache
 } from '@/services/supabaseService';
 
 const EventManagementSystem = React.memo(() => {
@@ -30,6 +30,7 @@ const EventManagementSystem = React.memo(() => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCreatingEvent, setIsCreatingEvent] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState<Date>(new Date());
   const { toast } = useToast();
 
   // Memoized date/time string
@@ -38,61 +39,78 @@ const EventManagementSystem = React.memo(() => {
     const day = now.toLocaleDateString('pt-BR', { weekday: 'long' });
     const date = now.toLocaleDateString('pt-BR');
     const time = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    return `Bem-vindo! Hoje é ${day}, ${date} - ${time}`;
-  }, []);
+    return `Bem-vindo! Hoje é ${day}, ${date} - ${time} | Última sync: ${lastSyncTime.toLocaleTimeString('pt-BR')}`;
+  }, [lastSyncTime]);
 
-  // Otimizado carregamento paralelo de dados
-  const loadAllData = useCallback(async (forceRefresh = false) => {
+  // Carregamento otimizado e paralelo de dados
+  const loadAllData = useCallback(async (forceRefresh = false, showNotification = false) => {
     try {
-      console.log('🔄 Carregando dados otimizado...');
-      setIsLoading(true);
+      console.log('🔄 INICIANDO carregamento otimizado de dados...');
+      
+      if (!forceRefresh) {
+        setIsLoading(true);
+      }
       setError(null);
       
-      // Carregar dados em paralelo para melhor performance
-      const [eventsData, demandsData, crmData, notesData] = await Promise.all([
-        fetchEvents(forceRefresh).catch(err => {
-          console.error('Erro ao carregar eventos:', err);
-          return [];
-        }),
-        fetchDemands(forceRefresh).catch(err => {
-          console.error('Erro ao carregar demandas:', err);
-          return [];
-        }),
-        fetchCRMRecords(forceRefresh).catch(err => {
-          console.error('Erro ao carregar CRM:', err);
-          return [];
-        }),
-        fetchNotes(forceRefresh).catch(err => {
-          console.error('Erro ao carregar notas:', err);
-          return [];
-        })
+      // Estratégia: carregar eventos primeiro, depois demandas em paralelo com outros dados
+      console.log('📊 Step 1: Loading events...');
+      const eventsData = await fetchEvents(forceRefresh);
+      
+      console.log('📊 Step 2: Loading other data in parallel...');
+      const [demandsData, crmData, notesData] = await Promise.allSettled([
+        fetchDemands(forceRefresh),
+        fetchCRMRecords(forceRefresh),
+        fetchNotes(forceRefresh)
       ]);
 
-      console.log('✅ Dados carregados com sucesso:', {
+      // Processar resultados com fallback
+      const demands = demandsData.status === 'fulfilled' ? demandsData.value : [];
+      const crm = crmData.status === 'fulfilled' ? crmData.value : [];
+      const notesResult = notesData.status === 'fulfilled' ? notesData.value : [];
+
+      console.log('✅ DADOS CARREGADOS:', {
         eventos: eventsData.length,
-        demandas: demandsData.length,
-        crm: crmData.length,
-        notas: notesData.length
+        demandas: demands.length,
+        crm: crm.length,
+        notas: notesResult.length
       });
 
-      // Associar demandas aos eventos de forma otimizada
+      // Associar demandas aos eventos
       const eventsWithDemands = eventsData.map(event => ({
         ...event,
-        demands: demandsData.filter(demand => demand.eventId === event.id)
+        demands: demands.filter(demand => demand.eventId === event.id)
       }));
 
+      // Atualizar estados
       setEvents(eventsWithDemands);
-      setCrmRecords(crmData);
-      setNotes(notesData);
+      setCrmRecords(crm);
+      setNotes(notesResult);
+      setLastSyncTime(new Date());
+      
+      if (showNotification) {
+        toast({
+          title: "🔄 Dados Sincronizados",
+          description: `${eventsData.length} eventos, ${demands.length} demandas atualizadas`,
+          duration: 2000
+        });
+      }
       
     } catch (error) {
       console.error('❌ Erro crítico ao carregar dados:', error);
       setError('Falha ao carregar dados. Verifique sua conexão.');
+      
       toast({
-        title: "Erro",
-        description: "Falha ao carregar dados. Tente novamente.",
-        variant: "destructive"
+        title: "❌ Erro de Carregamento",
+        description: "Não foi possível carregar os dados. Tentando novamente...",
+        variant: "destructive",
+        duration: 3000
       });
+      
+      // Retry automático após erro
+      setTimeout(() => {
+        console.log('🔄 Tentando recarregar dados automaticamente...');
+        loadAllData(true, false);
+      }, 3000);
     } finally {
       setIsLoading(false);
     }
@@ -100,18 +118,23 @@ const EventManagementSystem = React.memo(() => {
 
   // Carregamento inicial
   useEffect(() => {
-    loadAllData();
+    console.log('🚀 INICIALIZANDO EventManagementSystem...');
+    loadAllData(false, false);
   }, [loadAllData]);
 
-  // Real-time subscriptions otimizadas
+  // Real-time subscriptions SUPER OTIMIZADAS
   useEffect(() => {
-    console.log('🔌 Configurando subscriptions otimizadas...');
+    console.log('🔌 Configurando subscriptions ROBUSTAS...');
     
     const cleanup = setupRealtimeSubscriptions(
-      // Events change handler
+      // Events change handler - CRÍTICO
       async () => {
-        console.log('🔥 EVENTOS ATUALIZADOS EM TEMPO REAL');
+        console.log('🔥🔥🔥 EVENTOS ATUALIZADOS EM TEMPO REAL!');
         try {
+          // Invalidar cache primeiro
+          invalidateCache('events');
+          
+          // Recarregar dados
           const [eventsData, demandsData] = await Promise.all([
             fetchEvents(true),
             fetchDemands(true)
@@ -123,20 +146,28 @@ const EventManagementSystem = React.memo(() => {
           }));
           
           setEvents(eventsWithDemands);
+          setLastSyncTime(new Date());
           
           toast({
-            title: "✅ Atualizado",
-            description: "Eventos sincronizados automaticamente",
+            title: "🔥 Eventos Sincronizados",
+            description: `${eventsData.length} eventos atualizados em tempo real`,
             duration: 2000
           });
         } catch (error) {
           console.error('❌ Erro na sincronização de eventos:', error);
+          toast({
+            title: "⚠️ Erro de Sincronização",
+            description: "Eventos podem estar desatualizados",
+            variant: "destructive",
+            duration: 2000
+          });
         }
       },
       // Demands change handler
       async () => {
         console.log('🔥 DEMANDAS ATUALIZADAS EM TEMPO REAL');
         try {
+          invalidateCache('demands');
           const demandsData = await fetchDemands(true);
           
           setEvents(prevEvents => 
@@ -145,11 +176,12 @@ const EventManagementSystem = React.memo(() => {
               demands: demandsData.filter(demand => demand.eventId === event.id)
             }))
           );
+          setLastSyncTime(new Date());
           
           toast({
-            title: "✅ Atualizado", 
-            description: "Demandas sincronizadas automaticamente",
-            duration: 2000
+            title: "✅ Demandas Sincronizadas", 
+            description: "Demandas atualizadas automaticamente",
+            duration: 1500
           });
         } catch (error) {
           console.error('❌ Erro na sincronização de demandas:', error);
@@ -159,13 +191,15 @@ const EventManagementSystem = React.memo(() => {
       async () => {
         console.log('🔥 CRM ATUALIZADO EM TEMPO REAL');
         try {
+          invalidateCache('crm');
           const crmData = await fetchCRMRecords(true);
           setCrmRecords(crmData);
+          setLastSyncTime(new Date());
           
           toast({
-            title: "✅ Atualizado",
-            description: "CRM sincronizado automaticamente", 
-            duration: 2000
+            title: "✅ CRM Sincronizado",
+            description: "CRM atualizado automaticamente", 
+            duration: 1500
           });
         } catch (error) {
           console.error('❌ Erro na sincronização de CRM:', error);
@@ -175,13 +209,15 @@ const EventManagementSystem = React.memo(() => {
       async () => {
         console.log('🔥 NOTAS ATUALIZADAS EM TEMPO REAL');
         try {
+          invalidateCache('notes');
           const notesData = await fetchNotes(true);
           setNotes(notesData);
+          setLastSyncTime(new Date());
           
           toast({
-            title: "✅ Atualizado",
-            description: "Notas sincronizadas automaticamente",
-            duration: 2000
+            title: "✅ Notas Sincronizadas",
+            description: "Notas atualizadas automaticamente",
+            duration: 1500
           });
         } catch (error) {
           console.error('❌ Erro na sincronização de notas:', error);
@@ -192,7 +228,7 @@ const EventManagementSystem = React.memo(() => {
     return cleanup;
   }, [toast]);
 
-  // Event handlers otimizados
+  // Event handlers com otimização
   const handleCreateEvent = useCallback(async (eventData: Omit<Event, 'id' | 'archived' | 'demands'>) => {
     if (isCreatingEvent) {
       console.log('⏳ Evento já sendo criado, aguarde...');
@@ -201,21 +237,25 @@ const EventManagementSystem = React.memo(() => {
     
     try {
       setIsCreatingEvent(true);
-      console.log('🆕 Criando evento otimizado:', eventData.name);
+      console.log('🆕 Criando evento:', eventData.name);
       
       const newEvent = await createEvent(eventData);
-      console.log('✅ Evento criado:', newEvent.id);
+      console.log('✅ Evento criado com sucesso:', newEvent.id);
       
-      // Atualização otimista da UI
+      // Atualização otimista imediata
       setEvents(prev => [...prev, { ...newEvent, demands: [] }]);
       
       setIsEventModalOpen(false);
       setEditingEvent(null);
       
       toast({
-        title: "✅ Sucesso",
+        title: "🎉 Sucesso",
         description: `Evento "${eventData.name}" criado com sucesso`,
       });
+      
+      // Trigger realtime update para outros usuários
+      console.log('📡 Evento criado será sincronizado automaticamente...');
+      
     } catch (error) {
       console.error('❌ Erro ao criar evento:', error);
       toast({
@@ -223,16 +263,18 @@ const EventManagementSystem = React.memo(() => {
         description: "Falha ao criar evento. Tente novamente.",
         variant: "destructive"
       });
+      // Recarregar dados em caso de erro
+      loadAllData(true, false);
     } finally {
       setIsCreatingEvent(false);
     }
-  }, [isCreatingEvent, toast]);
+  }, [isCreatingEvent, toast, loadAllData]);
 
   const handleEditEvent = useCallback(async (eventData: Omit<Event, 'id' | 'archived' | 'demands'>) => {
     if (!editingEvent) return;
     
     try {
-      console.log('✏️ Editando evento otimizado:', editingEvent.id);
+      console.log('✏️ Editando evento:', editingEvent.id);
       
       // Atualização otimista
       setEvents(prev => prev.map(event => 
@@ -242,7 +284,7 @@ const EventManagementSystem = React.memo(() => {
       ));
       
       await updateEvent(editingEvent.id, eventData);
-      console.log('✅ Evento editado:', editingEvent.id);
+      console.log('✅ Evento editado com sucesso:', editingEvent.id);
       
       setEditingEvent(null);
       setIsEventModalOpen(false);
@@ -251,10 +293,13 @@ const EventManagementSystem = React.memo(() => {
         title: "✅ Sucesso",
         description: `Evento "${eventData.name}" atualizado com sucesso`,
       });
+      
+      console.log('📡 Edição do evento será sincronizada automaticamente...');
+      
     } catch (error) {
       console.error('❌ Erro ao editar evento:', error);
       // Reverter em caso de erro
-      loadAllData(true);
+      loadAllData(true, false);
       toast({
         title: "❌ Erro",
         description: "Falha ao atualizar evento. Tente novamente.",
@@ -266,6 +311,14 @@ const EventManagementSystem = React.memo(() => {
   const handleArchiveEvent = useCallback(async (eventId: string) => {
     try {
       console.log('📦 Arquivando evento:', eventId);
+      
+      // Atualização otimista
+      setEvents(prev => prev.map(event => 
+        event.id === eventId 
+          ? { ...event, archived: true }
+          : event
+      ));
+      
       await updateEvent(eventId, { archived: true });
       console.log('✅ Evento arquivado:', eventId);
       
@@ -275,17 +328,22 @@ const EventManagementSystem = React.memo(() => {
       });
     } catch (error) {
       console.error('❌ Erro ao arquivar evento:', error);
+      loadAllData(true, false);
       toast({
         title: "❌ Erro",
         description: "Falha ao arquivar evento. Tente novamente.",
         variant: "destructive"
       });
     }
-  }, [toast]);
+  }, [toast, loadAllData]);
 
   const handleDeleteEvent = useCallback(async (eventId: string) => {
     try {
       console.log('🗑️ Deletando evento:', eventId);
+      
+      // Atualização otimista
+      setEvents(prev => prev.filter(event => event.id !== eventId));
+      
       await deleteEvent(eventId);
       console.log('✅ Evento deletado:', eventId);
       
@@ -295,17 +353,25 @@ const EventManagementSystem = React.memo(() => {
       });
     } catch (error) {
       console.error('❌ Erro ao deletar evento:', error);
+      loadAllData(true, false);
       toast({
         title: "❌ Erro",
         description: "Falha ao excluir evento. Tente novamente.",
         variant: "destructive"
       });
     }
-  }, [toast]);
+  }, [toast, loadAllData]);
 
   const handleRestoreEvent = useCallback(async (eventId: string) => {
     try {
       console.log('🔄 Restaurando evento:', eventId);
+      
+      setEvents(prev => prev.map(event => 
+        event.id === eventId 
+          ? { ...event, archived: false }
+          : event
+      ));
+      
       await updateEvent(eventId, { archived: false });
       console.log('✅ Evento restaurado:', eventId);
       
@@ -315,13 +381,14 @@ const EventManagementSystem = React.memo(() => {
       });
     } catch (error) {
       console.error('❌ Erro ao restaurar evento:', error);
+      loadAllData(true, false);
       toast({
         title: "❌ Erro",
         description: "Falha ao restaurar evento. Tente novamente.",
         variant: "destructive"
       });
     }
-  }, [toast]);
+  }, [toast, loadAllData]);
 
   const handleAddDemand = useCallback(async (eventId: string, demandData: Omit<Demand, 'id' | 'eventId' | 'completed' | 'urgency'>) => {
     try {
@@ -544,13 +611,20 @@ const EventManagementSystem = React.memo(() => {
     [events]
   );
 
+  // Manual refresh function
+  const handleManualRefresh = useCallback(() => {
+    console.log('🔄 Manual refresh triggered');
+    loadAllData(true, true);
+  }, [loadAllData]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen w-full pl-[30px] pr-[30px] pt-[25px] pb-0 bg-[#E4E9EF] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-xl font-medium text-[#2E3A59]">Carregando dados...</p>
-          {error && <p className="text-red-500 mt-2">{error}</p>}
+          <p className="text-xl font-medium text-[#2E3A59]">Carregando dados em tempo real...</p>
+          <p className="text-sm text-[#2E3A59]/70 mt-2">Conectando à sincronização automática</p>
+          {error && <p className="text-red-500 mt-2 text-sm">{error}</p>}
         </div>
       </div>
     );
@@ -561,13 +635,20 @@ const EventManagementSystem = React.memo(() => {
       <div className="min-h-screen w-full pl-[30px] pr-[30px] pt-[25px] pb-0 bg-[#E4E9EF] flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-6">⚠️</div>
-          <p className="text-xl font-medium text-[#2E3A59] mb-3">Erro ao carregar dados</p>
+          <p className="text-xl font-medium text-[#2E3A59] mb-3">Erro de Conexão</p>
           <p className="text-base text-[#2E3A59]/70 mb-6">{error}</p>
           <Button 
-            onClick={() => loadAllData(true)}
-            className="bg-gradient-to-r from-[#467BCA] to-[#77D1A8] hover:opacity-90 text-white px-6 py-3 rounded-xl"
+            onClick={handleManualRefresh}
+            className="bg-gradient-to-r from-[#467BCA] to-[#77D1A8] hover:opacity-90 text-white px-6 py-3 rounded-xl mr-3"
           >
-            Tentar Novamente
+            🔄 Tentar Novamente
+          </Button>
+          <Button 
+            onClick={() => window.location.reload()}
+            variant="outline"
+            className="px-6 py-3 rounded-xl"
+          >
+            🔄 Recarregar Página
           </Button>
         </div>
       </div>
@@ -579,8 +660,22 @@ const EventManagementSystem = React.memo(() => {
       <div className="w-full">
         <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="text-left">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-[#467BCA] to-[#77D1A8] inline-block text-transparent bg-clip-text mb-3">Lon Demandas</h1>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-[#467BCA] to-[#77D1A8] inline-block text-transparent bg-clip-text mb-3">
+              Lon Demandas 🚀
+            </h1>
             <p className="text-[#2E3A59]/70 text-base">{getCurrentDateTime}</p>
+            <div className="flex items-center gap-2 mt-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-xs text-[#2E3A59]/70">Sincronização em tempo real ativa</span>
+              <Button
+                onClick={handleManualRefresh}
+                variant="ghost"
+                size="sm"
+                className="text-xs h-6 px-2"
+              >
+                🔄 Refresh
+              </Button>
+            </div>
           </div>
           
           <Button 
