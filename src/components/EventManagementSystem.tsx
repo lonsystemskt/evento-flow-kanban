@@ -487,7 +487,7 @@ const EventManagementSystem = () => {
   }
 
   return (
-    <div className="min-h-screen p-5 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20" style={{ margin: '20px' }}>
+    <div className="min-h-screen p-5 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20">
       <div className="max-w-full mx-auto">
         <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
