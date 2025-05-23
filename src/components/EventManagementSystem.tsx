@@ -138,8 +138,8 @@ const EventManagementSystem = () => {
   console.log('Completed demands:', completedDemands);
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen p-5 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20" style={{ margin: '20px' }}>
+      <div className="max-w-full mx-auto">
         <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-[#467BCA] to-[#77D1A8] inline-block text-transparent bg-clip-text mb-3">Lon Demandas</h1>
@@ -173,8 +173,8 @@ const EventManagementSystem = () => {
             </TabsList>
           </div>
 
-          <TabsContent value="demands" className="space-y-1">
-            <div className="space-y-1">
+          <TabsContent value="demands" className="space-y-0">
+            <div className="space-y-0">
               {activeEvents.map(event => (
                 <EventRow
                   key={event.id}

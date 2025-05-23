@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -35,7 +34,7 @@ const EventRow = ({
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollContainerRef.current) {
-      const scrollAmount = 170;
+      const scrollAmount = 190;
       const currentScroll = scrollContainerRef.current.scrollLeft;
       const newScroll = direction === 'left' 
         ? currentScroll - scrollAmount 
@@ -72,17 +71,17 @@ const EventRow = ({
   console.log('Active demands:', activeDemands);
 
   return (
-    <div className="py-2 px-3 relative bg-transparent border-b border-gray-100/40 hover:bg-gray-50/20 transition-all duration-200">
-      <div className="flex items-center gap-3 min-h-[140px]">
+    <div className="py-1 px-3 relative bg-transparent border-b border-gray-100/30 hover:bg-gray-50/20 transition-all duration-200">
+      <div className="flex items-center gap-3 min-h-[100px]">
         {/* Fixed Event Info Section - Left Side */}
-        <div className="flex items-center gap-1.5 w-44 flex-shrink-0">
+        <div className="flex items-center gap-2 w-44 flex-shrink-0">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <div className="w-7 h-7 bg-gradient-to-br from-blue-50/50 to-green-50/50 rounded-full flex items-center justify-center cursor-pointer hover:bg-gradient-to-br hover:from-blue-100/50 hover:to-green-100/50 transition-all duration-200 relative group">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-50/50 to-green-50/50 rounded-full flex items-center justify-center cursor-pointer hover:bg-gradient-to-br hover:from-blue-100/50 hover:to-green-100/50 transition-all duration-200 relative group">
                 {event.logo ? (
-                  <img src={event.logo} alt={event.name} className="w-7 h-7 rounded-full object-cover" />
+                  <img src={event.logo} alt={event.name} className="w-8 h-8 rounded-full object-cover" />
                 ) : (
-                  <span className="text-[#122A3A] font-bold text-xs">{event.name.charAt(0).toUpperCase()}</span>
+                  <span className="text-[#122A3A] font-bold text-sm">{event.name.charAt(0).toUpperCase()}</span>
                 )}
               </div>
             </DropdownMenuTrigger>
@@ -105,9 +104,9 @@ const EventRow = ({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <div className="flex-1 min-w-0 max-w-[100px]">
-            <h3 className="text-xs font-bold text-[#122A3A] truncate leading-tight mb-0.5">{event.name}</h3>
-            <p className="text-[9px] text-[#122A3A]/60 font-medium">{event.date.toLocaleDateString('pt-BR')}</p>
+          <div className="flex-1 min-w-0 max-w-[120px]">
+            <h3 className="text-sm font-bold text-[#122A3A] truncate leading-tight mb-0.5">{event.name}</h3>
+            <p className="text-[10px] text-[#122A3A]/60 font-medium">{event.date.toLocaleDateString('pt-BR')}</p>
           </div>
 
           <Button
@@ -120,7 +119,7 @@ const EventRow = ({
         </div>
 
         {/* Separator - Very subtle */}
-        <div className="w-px h-10 bg-gray-100/50"></div>
+        <div className="w-px h-8 bg-gray-100/40"></div>
 
         {/* Demands Section - Right Side */}
         <div className="flex-1 relative min-w-0">
@@ -149,7 +148,7 @@ const EventRow = ({
               <div 
                 ref={scrollContainerRef}
                 className="flex gap-2 overflow-x-auto scrollbar-hide py-1 px-6"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', minHeight: '140px' }}
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', minHeight: '100px' }}
               >
                 {activeDemands.map(demand => (
                   <DemandCard
@@ -163,7 +162,7 @@ const EventRow = ({
               </div>
             </>
           ) : (
-            <div className="text-center py-4 text-[#122A3A]/50 bg-gray-50/20 rounded-lg border border-dashed border-gray-200/30">
+            <div className="text-center py-3 text-[#122A3A]/50 bg-gray-50/20 rounded-lg border border-dashed border-gray-200/30">
               <p className="text-xs font-medium mb-0.5">Sem demandas</p>
               <p className="text-[10px]">Clique no botão + para criar uma nova demanda</p>
             </div>
