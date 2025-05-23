@@ -13,76 +13,76 @@ export type Database = {
         Row: {
           completed: boolean
           contact: string
-          created_at: string | null
+          created_at: string
           date: string
           email: string
           file: string | null
           id: string
           name: string
-          status: string | null
+          status: string
           subject: string
-          updated_at: string | null
+          updated_at: string
         }
         Insert: {
           completed?: boolean
           contact: string
-          created_at?: string | null
+          created_at?: string
           date: string
           email: string
           file?: string | null
           id?: string
           name: string
-          status?: string | null
+          status?: string
           subject: string
-          updated_at?: string | null
+          updated_at?: string
         }
         Update: {
           completed?: boolean
           contact?: string
-          created_at?: string | null
+          created_at?: string
           date?: string
           email?: string
           file?: string | null
           id?: string
           name?: string
-          status?: string | null
+          status?: string
           subject?: string
-          updated_at?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
       demands: {
         Row: {
           completed: boolean
-          created_at: string | null
+          created_at: string
           date: string
           event_id: string
           id: string
           subject: string
           title: string
-          updated_at: string | null
+          updated_at: string
           urgency: string
         }
         Insert: {
           completed?: boolean
-          created_at?: string | null
+          created_at?: string
           date: string
           event_id: string
           id?: string
           subject: string
           title: string
-          updated_at?: string | null
+          updated_at?: string
           urgency: string
         }
         Update: {
           completed?: boolean
-          created_at?: string | null
+          created_at?: string
           date?: string
           event_id?: string
           id?: string
           subject?: string
           title?: string
-          updated_at?: string | null
+          updated_at?: string
           urgency?: string
         }
         Relationships: [
@@ -98,60 +98,60 @@ export type Database = {
       events: {
         Row: {
           archived: boolean
-          created_at: string | null
+          created_at: string
           date: string
           id: string
           logo: string | null
           name: string
-          updated_at: string | null
+          updated_at: string
         }
         Insert: {
           archived?: boolean
-          created_at?: string | null
+          created_at?: string
           date: string
           id?: string
           logo?: string | null
           name: string
-          updated_at?: string | null
+          updated_at?: string
         }
         Update: {
           archived?: boolean
-          created_at?: string | null
+          created_at?: string
           date?: string
           id?: string
           logo?: string | null
           name?: string
-          updated_at?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
       notes: {
         Row: {
           author: string
-          created_at: string | null
+          created_at: string
           date: string
           id: string
           subject: string
           title: string
-          updated_at: string | null
+          updated_at: string
         }
         Insert: {
           author: string
-          created_at?: string | null
+          created_at?: string
           date: string
           id?: string
           subject: string
           title: string
-          updated_at?: string | null
+          updated_at?: string
         }
         Update: {
           author?: string
-          created_at?: string | null
+          created_at?: string
           date?: string
           id?: string
           subject?: string
           title?: string
-          updated_at?: string | null
+          updated_at?: string
         }
         Relationships: []
       }

@@ -33,11 +33,10 @@ const EventManagementSystem = React.memo(() => {
   const [isCreatingEvent, setIsCreatingEvent] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date>(new Date());
   const [isConnected, setIsConnected] = useState(true);
-  const [retryCount, setRetryCount] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { toast } = useToast();
 
-  // Status de conectividade
+  // Status display
   const getCurrentDateTime = useMemo(() => {
     const now = new Date();
     const day = now.toLocaleDateString('pt-BR', { weekday: 'long' });
@@ -47,79 +46,49 @@ const EventManagementSystem = React.memo(() => {
     return `Bem-vindo! Hoje é ${day}, ${date} - ${time} | Última sync: ${syncTime}`;
   }, [lastSyncTime]);
 
-  // Verificar conectividade periodicamente
+  // Verificar conectividade
   useEffect(() => {
     const checkConnection = async () => {
       const connected = await checkConnectivity();
       setIsConnected(connected);
-      
-      if (!connected && retryCount < 5) {
-        console.log('❌ Sem conectividade, tentando reconectar...');
-        setRetryCount(prev => prev + 1);
-        setTimeout(checkConnection, 5000 * Math.pow(2, retryCount)); // Backoff exponencial
-      } else if (connected && retryCount > 0) {
-        console.log('✅ Conectividade restaurada!');
-        setRetryCount(0);
-        loadAllData(true, true);
-      }
     };
 
-    const interval = setInterval(checkConnection, 30000); // Verificar a cada 30s
+    checkConnection();
+    const interval = setInterval(checkConnection, 30000);
     return () => clearInterval(interval);
-  }, [retryCount]);
+  }, []);
 
-  // Carregamento de dados com recuperação robusta
+  // Carregamento principal de dados
   const loadAllData = useCallback(async (forceRefresh = false, showNotification = false) => {
     try {
-      console.log('🔄 INICIANDO carregamento robusto de dados...');
+      console.log('🔄 Carregando dados...');
       
       if (!forceRefresh) {
         setIsLoading(true);
       }
       setError(null);
       
-      // Verificar conectividade primeiro
+      // Verificar conectividade
       const connected = await checkConnectivity();
       if (!connected) {
-        throw new Error('Sem conectividade com a base de dados');
+        throw new Error('Sem conectividade com o banco de dados');
       }
       
       setIsConnected(true);
       
-      // Invalidar cache se forçado
-      if (forceRefresh) {
-        console.log('🔥 Invalidando cache completamente...');
-        invalidateCache();
-      }
-      
-      // Carregar dados de forma paralela com fallback
-      console.log('📊 Carregando todos os dados...');
-      const [eventsResult, demandsResult, crmResult, notesResult] = await Promise.allSettled([
-        fetchEvents(true),
-        fetchDemands(true),
-        fetchCRMRecords(true),
-        fetchNotes(true)
+      // Carregar dados em paralelo
+      const [eventsData, demandsData, crmData, notesData] = await Promise.all([
+        fetchEvents(forceRefresh),
+        fetchDemands(forceRefresh),
+        fetchCRMRecords(forceRefresh),
+        fetchNotes(forceRefresh)
       ]);
 
-      // Processar resultados com fallback seguro
-      const eventsData = eventsResult.status === 'fulfilled' ? eventsResult.value : [];
-      const demandsData = demandsResult.status === 'fulfilled' ? demandsResult.value : [];
-      const crmData = crmResult.status === 'fulfilled' ? crmResult.value : [];
-      const notesData = notesResult.status === 'fulfilled' ? notesResult.value : [];
-
-      // Log de erros se houver
-      [eventsResult, demandsResult, crmResult, notesResult].forEach((result, index) => {
-        if (result.status === 'rejected') {
-          const tables = ['eventos', 'demandas', 'crm', 'notas'];
-          console.error(`❌ Erro ao carregar ${tables[index]}:`, result.reason);
-        }
-      });
-
-      console.log('✅ DADOS CARREGADOS:', {
+      console.log('✅ Dados carregados:', {
         eventos: eventsData.length,
         demandas: demandsData.length,
         crm: crmData.length,
-        notas: notesData.length // Fixed: notesData.length instead of notesResult.length
+        notas: notesData.length
       });
 
       // Associar demandas aos eventos
@@ -128,118 +97,78 @@ const EventManagementSystem = React.memo(() => {
         demands: demandsData.filter(demand => demand.eventId === event.id)
       }));
 
-      // Atualizar estados
       setEvents(eventsWithDemands);
       setCrmRecords(crmData);
       setNotes(notesData);
       setLastSyncTime(new Date());
-      setRetryCount(0); // Reset contador de erros
       
       if (showNotification) {
         toast({
-          title: "🔄 Dados Sincronizados",
+          title: "✅ Dados Sincronizados",
           description: `${eventsData.length} eventos, ${demandsData.length} demandas atualizadas`,
           duration: 2000
         });
       }
       
     } catch (error) {
-      console.error('❌ Erro crítico ao carregar dados:', error);
+      console.error('❌ Erro ao carregar dados:', error);
       setIsConnected(false);
       
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      setError(`Falha no carregamento: ${errorMessage}`);
+      setError(errorMessage);
       
       toast({
         title: "❌ Erro de Carregamento",
-        description: `${errorMessage}. ${retryCount < 3 ? 'Tentando novamente...' : 'Verifique sua conexão.'}`,
+        description: errorMessage,
         variant: "destructive",
         duration: 4000
       });
-      
-      // Retry automático com backoff
-      if (retryCount < 3) {
-        const delay = 2000 * Math.pow(2, retryCount);
-        setRetryCount(prev => prev + 1);
-        setTimeout(() => {
-          console.log(`🔄 Tentativa ${retryCount + 1}/3 em ${delay}ms...`);
-          loadAllData(true, false);
-        }, delay);
-      }
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [toast, retryCount]);
+  }, [toast]);
 
   // Carregamento inicial
   useEffect(() => {
-    console.log('🚀 INICIALIZANDO Sistema de Eventos...');
+    console.log('🚀 Inicializando sistema...');
     loadAllData(false, false);
   }, [loadAllData]);
 
-  // Real-time subscriptions com reconexão automática
+  // Real-time subscriptions
   useEffect(() => {
-    console.log('🔌 Configurando subscriptions robustas...');
+    console.log('🔌 Configurando real-time...');
     
     const cleanup = setupRealtimeSubscriptions(
-      // Events change handler
       async () => {
-        console.log('🔥 EVENTOS ATUALIZADOS - RECARREGANDO');
-        try {
-          await loadAllData(true, true);
-        } catch (error) {
-          console.error('❌ Erro na sincronização de eventos:', error);
-          toast({
-            title: "⚠️ Erro de Sincronização",
-            description: "Eventos podem estar desatualizados",
-            variant: "destructive",
-            duration: 2000
-          });
-        }
+        console.log('🔥 Eventos atualizados');
+        await loadAllData(true, true);
       },
-      // Demands change handler
       async () => {
-        console.log('🔥 DEMANDAS ATUALIZADAS - RECARREGANDO');
-        try {
-          await loadAllData(true, true);
-        } catch (error) {
-          console.error('❌ Erro na sincronização de demandas:', error);
-        }
+        console.log('🔥 Demandas atualizadas');
+        await loadAllData(true, true);
       },
-      // CRM change handler
       async () => {
-        console.log('🔥 CRM ATUALIZADO - RECARREGANDO');
-        try {
-          await loadAllData(true, true);
-        } catch (error) {
-          console.error('❌ Erro na sincronização de CRM:', error);
-        }
+        console.log('🔥 CRM atualizado');
+        await loadAllData(true, true);
       },
-      // Notes change handler
       async () => {
-        console.log('🔥 NOTAS ATUALIZADAS - RECARREGANDO');
-        try {
-          await loadAllData(true, true);
-        } catch (error) {
-          console.error('❌ Erro na sincronização de notas:', error);
-        }
+        console.log('🔥 Notas atualizadas');
+        await loadAllData(true, true);
       }
     );
 
     return cleanup;
-  }, [toast, loadAllData]);
+  }, [loadAllData]);
 
-  // Handlers para eventos
+  // Event handlers
   const handleCreateEvent = useCallback(async (eventData: Omit<Event, 'id' | 'archived' | 'demands'>) => {
     if (isCreatingEvent) return;
     
     try {
       setIsCreatingEvent(true);
-      console.log('🆕 Criando evento:', eventData.name);
       
       const newEvent = await createEvent(eventData);
-      console.log('✅ Evento criado:', newEvent.id);
       
       setIsEventModalOpen(false);
       setEditingEvent(null);
@@ -249,7 +178,6 @@ const EventManagementSystem = React.memo(() => {
         description: `Evento "${eventData.name}" criado com sucesso`,
       });
       
-      // Forçar recarregamento imediato
       await loadAllData(true, false);
       
     } catch (error) {
@@ -259,7 +187,6 @@ const EventManagementSystem = React.memo(() => {
         description: "Falha ao criar evento. Tente novamente.",
         variant: "destructive"
       });
-      loadAllData(true, false);
     } finally {
       setIsCreatingEvent(false);
     }
@@ -269,10 +196,7 @@ const EventManagementSystem = React.memo(() => {
     if (!editingEvent) return;
     
     try {
-      console.log('✏️ Editando evento:', editingEvent.id);
-      
       await updateEvent(editingEvent.id, eventData);
-      console.log('✅ Evento editado:', editingEvent.id);
       
       setEditingEvent(null);
       setIsEventModalOpen(false);
@@ -286,7 +210,6 @@ const EventManagementSystem = React.memo(() => {
       
     } catch (error) {
       console.error('❌ Erro ao editar evento:', error);
-      loadAllData(true, false);
       toast({
         title: "❌ Erro",
         description: "Falha ao atualizar evento.",
@@ -305,7 +228,6 @@ const EventManagementSystem = React.memo(() => {
       await loadAllData(true, false);
     } catch (error) {
       console.error('❌ Erro ao arquivar:', error);
-      loadAllData(true, false);
       toast({
         title: "❌ Erro",
         description: "Falha ao arquivar evento.",
@@ -324,7 +246,6 @@ const EventManagementSystem = React.memo(() => {
       await loadAllData(true, false);
     } catch (error) {
       console.error('❌ Erro ao deletar:', error);
-      loadAllData(true, false);
       toast({
         title: "❌ Erro",
         description: "Falha ao excluir evento.",
@@ -343,7 +264,6 @@ const EventManagementSystem = React.memo(() => {
       await loadAllData(true, false);
     } catch (error) {
       console.error('❌ Erro ao restaurar:', error);
-      loadAllData(true, false);
       toast({
         title: "❌ Erro",
         description: "Falha ao restaurar evento.",
@@ -352,6 +272,7 @@ const EventManagementSystem = React.memo(() => {
     }
   }, [toast, loadAllData]);
 
+  // Demand handlers
   const handleAddDemand = useCallback(async (eventId: string, demandData: Omit<Demand, 'id' | 'eventId' | 'completed' | 'urgency'>) => {
     try {
       await createDemand({ ...demandData, eventId });
@@ -539,9 +460,8 @@ const EventManagementSystem = React.memo(() => {
 
   // Manual refresh
   const handleManualRefresh = useCallback(async () => {
-    console.log('🔄 Refresh manual acionado');
+    console.log('🔄 Refresh manual');
     setIsRefreshing(true);
-    setRetryCount(0);
     await loadAllData(true, true);
   }, [loadAllData]);
 
@@ -550,13 +470,8 @@ const EventManagementSystem = React.memo(() => {
       <div className="min-h-screen w-full pl-[30px] pr-[30px] pt-[25px] pb-0 bg-[#E4E9EF] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-xl font-medium text-[#2E3A59]">
-            {isConnected ? 'Carregando dados...' : 'Reconectando...'}
-          </p>
-          <p className="text-sm text-[#2E3A59]/70 mt-2">
-            {isConnected ? 'Sincronização em tempo real' : `Tentativa ${retryCount}/3`}
-          </p>
-          {error && <p className="text-red-500 mt-2 text-sm">{error}</p>}
+          <p className="text-xl font-medium text-[#2E3A59]">Carregando sistema...</p>
+          <p className="text-sm text-[#2E3A59]/70 mt-2">Conectando ao banco de dados</p>
         </div>
       </div>
     );
@@ -566,12 +481,8 @@ const EventManagementSystem = React.memo(() => {
     return (
       <div className="min-h-screen w-full pl-[30px] pr-[30px] pt-[25px] pb-0 bg-[#E4E9EF] flex items-center justify-center">
         <div className="text-center">
-          <div className="text-6xl mb-6">
-            {isConnected ? '⚠️' : '📡'}
-          </div>
-          <p className="text-xl font-medium text-[#2E3A59] mb-3">
-            {isConnected ? 'Erro de Carregamento' : 'Sem Conectividade'}
-          </p>
+          <div className="text-6xl mb-6">📡</div>
+          <p className="text-xl font-medium text-[#2E3A59] mb-3">Erro de Conexão</p>
           <p className="text-base text-[#2E3A59]/70 mb-6">{error}</p>
           <div className="flex gap-3 justify-center">
             <Button 
@@ -585,17 +496,8 @@ const EventManagementSystem = React.memo(() => {
                   Reconectando...
                 </>
               ) : (
-                <>
-                  🔄 Tentar Novamente
-                </>
+                '🔄 Tentar Novamente'
               )}
-            </Button>
-            <Button 
-              onClick={() => window.location.reload()}
-              variant="outline"
-              className="px-6 py-3 rounded-xl"
-            >
-              🔄 Recarregar Página
             </Button>
           </div>
         </div>
@@ -619,7 +521,7 @@ const EventManagementSystem = React.memo(() => {
                 <WifiOff className="w-4 h-4 text-red-500" />
               )}
               <span className="text-xs text-[#2E3A59]/70">
-                {isConnected ? 'Conectado - Sincronização ativa' : 'Desconectado - Tentando reconectar'}
+                {isConnected ? 'Conectado - Sistema ativo' : 'Desconectado'}
               </span>
               <Button
                 onClick={handleManualRefresh}
@@ -752,7 +654,7 @@ const EventManagementSystem = React.memo(() => {
                 <div key={event.id} className="bg-[#F6F7FB] p-4 rounded-xl border border-[rgba(0,0,0,0.05)] flex items-center justify-between transition-all duration-200">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                      {event.logo && event.logo !== 'undefined' ? (
+                      {event.logo ? (
                         <img src={event.logo} alt={event.name} className="w-10 h-10 rounded-full object-cover" />
                       ) : (
                         <span className="text-[#2E3A59] font-medium text-sm">{event.name.charAt(0)}</span>
