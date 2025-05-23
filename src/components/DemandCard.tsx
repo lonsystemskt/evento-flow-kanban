@@ -41,7 +41,7 @@ const DemandCard = ({ demand, onEdit, onDelete, onComplete }: DemandCardProps) =
   };
 
   return (
-    <div className="min-w-[196px] max-w-[196px] min-h-[88px] bg-gray-50/40 rounded-lg border border-gray-200/30 flex flex-col p-3">
+    <div className="min-w-[196px] max-w-[196px] min-h-[88px] bg-[#F6F7FB] dark:bg-[#1A1F2B] rounded-lg border border-[rgba(0,0,0,0.05)] dark:border-[rgba(60,60,60,0.1)] flex flex-col p-3 shadow-sm">
       {/* Urgency Indicator */}
       <div className="flex items-center justify-between mb-2">
         <span className={`px-1.5 py-0.5 text-xs font-medium rounded-md text-white ${getUrgencyColor(demand.urgency)}`}>
@@ -55,13 +55,13 @@ const DemandCard = ({ demand, onEdit, onDelete, onComplete }: DemandCardProps) =
 
       {/* Content - Takes available space */}
       <div className="flex-1 flex flex-col mb-2 text-left">
-        <h4 className="font-semibold text-[#122A3A] text-sm mb-1 line-clamp-2 leading-tight">
+        <h4 className="font-semibold text-[#2E3A59] dark:text-white text-sm mb-1 line-clamp-2 leading-tight">
           {demand.title || 'Título não informado'}
         </h4>
-        <p className="text-[#122A3A]/60 text-xs mb-1 line-clamp-2 leading-relaxed flex-1">
+        <p className="text-[#3B4D63] dark:text-gray-300 text-xs mb-1 line-clamp-2 leading-relaxed flex-1">
           {demand.subject || 'Assunto não informado'}
         </p>
-        <p className="text-[#122A3A]/50 text-xs font-medium">
+        <p className="text-[#3B4D63]/50 dark:text-gray-400 text-xs font-medium">
           {demand.date ? demand.date.toLocaleDateString('pt-BR') : 'Data não informada'}
         </p>
       </div>
@@ -73,7 +73,7 @@ const DemandCard = ({ demand, onEdit, onDelete, onComplete }: DemandCardProps) =
             variant="ghost"
             size="sm"
             onClick={onEdit}
-            className="w-6 h-6 p-0 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors duration-200"
+            className="w-6 h-6 p-0 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 rounded-md transition-colors duration-200"
           >
             <Edit className="w-3 h-3" />
           </Button>
@@ -81,7 +81,7 @@ const DemandCard = ({ demand, onEdit, onDelete, onComplete }: DemandCardProps) =
             variant="ghost"
             size="sm"
             onClick={onDelete}
-            className="w-6 h-6 p-0 hover:bg-red-50 hover:text-red-600 rounded-md transition-colors duration-200"
+            className="w-6 h-6 p-0 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400 rounded-md transition-colors duration-200"
           >
             <Trash2 className="w-3 h-3" />
           </Button>

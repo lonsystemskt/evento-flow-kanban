@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Upload } from 'lucide-react';
+import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { CRM } from '@/types/event';
@@ -24,8 +24,6 @@ const CRMModal = ({ isOpen, onClose, onSave, editingCRM }: CRMModalProps) => {
   const [contact, setContact] = useState('');
   const [email, setEmail] = useState('');
   const [subject, setSubject] = useState('');
-  const [file, setFile] = useState('');
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [completed, setCompleted] = useState(false);
 
@@ -35,31 +33,17 @@ const CRMModal = ({ isOpen, onClose, onSave, editingCRM }: CRMModalProps) => {
       setContact(editingCRM.contact);
       setEmail(editingCRM.email);
       setSubject(editingCRM.subject);
-      setFile(editingCRM.file || '');
       setDate(editingCRM.date);
       setCompleted(editingCRM.completed);
-      setUploadedFile(null);
     } else {
       setName('');
       setContact('');
       setEmail('');
       setSubject('');
-      setFile('');
       setDate(new Date());
       setCompleted(false);
-      setUploadedFile(null);
     }
   }, [editingCRM]);
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      setUploadedFile(selectedFile);
-      // Create a URL for the file so it can be accessed later
-      const fileUrl = URL.createObjectURL(selectedFile);
-      setFile(fileUrl);
-    }
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +53,7 @@ const CRMModal = ({ isOpen, onClose, onSave, editingCRM }: CRMModalProps) => {
         contact,
         email,
         subject,
-        file,
+        file: '', // Mantendo campo vazio para compatibilidade
         date,
         completed
       });
@@ -79,87 +63,65 @@ const CRMModal = ({ isOpen, onClose, onSave, editingCRM }: CRMModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-white rounded-xl border border-gray-200">
+      <DialogContent className="sm:max-w-md bg-white dark:bg-[#1A1F2B] rounded-xl border border-gray-200 dark:border-gray-800">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-[#122A3A]">
+          <DialogTitle className="text-xl font-bold text-[#2E3A59] dark:text-white text-left">
             {editingCRM ? 'Editar Registro CRM' : 'Novo Registro CRM'}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="name" className="text-sm font-medium text-[#122A3A]">Nome</Label>
+            <Label htmlFor="name" className="text-sm font-medium text-[#2E3A59] dark:text-white text-left block">Nome</Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1"
+              className="mt-1 dark:bg-[#292f3d] dark:border-gray-700 dark:text-white"
               required
             />
           </div>
 
           <div>
-            <Label htmlFor="contact" className="text-sm font-medium text-[#122A3A]">Contato (Telefone/WhatsApp)</Label>
+            <Label htmlFor="contact" className="text-sm font-medium text-[#2E3A59] dark:text-white text-left block">Contato (Telefone/WhatsApp)</Label>
             <Input
               id="contact"
               value={contact}
               onChange={(e) => setContact(e.target.value)}
-              className="mt-1"
+              className="mt-1 dark:bg-[#292f3d] dark:border-gray-700 dark:text-white"
               required
             />
           </div>
 
           <div>
-            <Label htmlFor="email" className="text-sm font-medium text-[#122A3A]">E-mail</Label>
+            <Label htmlFor="email" className="text-sm font-medium text-[#2E3A59] dark:text-white text-left block">E-mail</Label>
             <Input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1"
+              className="mt-1 dark:bg-[#292f3d] dark:border-gray-700 dark:text-white"
             />
           </div>
 
           <div>
-            <Label htmlFor="subject" className="text-sm font-medium text-[#122A3A]">Assunto</Label>
+            <Label htmlFor="subject" className="text-sm font-medium text-[#2E3A59] dark:text-white text-left block">Assunto</Label>
             <Textarea
               id="subject"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              className="mt-1"
+              className="mt-1 dark:bg-[#292f3d] dark:border-gray-700 dark:text-white"
               rows={3}
             />
           </div>
 
           <div>
-            <Label className="text-sm font-medium text-[#122A3A]">Arquivo</Label>
-            <div className="mt-1 flex items-center gap-2">
-              <Input
-                type="file"
-                onChange={handleFileUpload}
-                className="flex-1"
-                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
-              />
-              <Button type="button" variant="outline" size="sm" asChild>
-                <label className="cursor-pointer">
-                  <Upload className="w-4 h-4" />
-                </label>
-              </Button>
-            </div>
-            {uploadedFile && (
-              <p className="text-xs text-green-600 mt-1">
-                Arquivo selecionado: {uploadedFile.name}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <Label className="text-sm font-medium text-[#122A3A]">Data</Label>
+            <Label className="text-sm font-medium text-[#2E3A59] dark:text-white text-left block">Data</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full justify-start text-left font-normal mt-1",
+                    "w-full justify-start text-left font-normal mt-1 dark:bg-[#292f3d] dark:border-gray-700 dark:text-white",
                     !date && "text-muted-foreground"
                   )}
                 >
@@ -167,13 +129,13 @@ const CRMModal = ({ isOpen, onClose, onSave, editingCRM }: CRMModalProps) => {
                   {date ? format(date, "dd/MM/yyyy") : <span>Selecione uma data</span>}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverContent className="w-auto p-0 dark:bg-[#1A1F2B]" align="start">
                 <Calendar
                   mode="single"
                   selected={date}
                   onSelect={setDate}
                   initialFocus
-                  className="pointer-events-auto"
+                  className="pointer-events-auto dark:bg-[#1A1F2B] dark:text-white"
                 />
               </PopoverContent>
             </Popover>
@@ -185,13 +147,13 @@ const CRMModal = ({ isOpen, onClose, onSave, editingCRM }: CRMModalProps) => {
               id="completed"
               checked={completed}
               onChange={(e) => setCompleted(e.target.checked)}
-              className="w-4 h-4 text-blue-600 rounded"
+              className="w-4 h-4 text-blue-600 rounded dark:bg-[#292f3d] dark:border-gray-700"
             />
-            <Label htmlFor="completed" className="text-sm font-medium text-[#122A3A]">OK</Label>
+            <Label htmlFor="completed" className="text-sm font-medium text-[#2E3A59] dark:text-white">OK</Label>
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose} className="dark:bg-[#292f3d] dark:border-gray-700 dark:text-white">
               Cancelar
             </Button>
             <Button

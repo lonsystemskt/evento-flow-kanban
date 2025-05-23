@@ -1,13 +1,14 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 214 14% 89%;
     --foreground: 222.2 84% 4.9%;
 
-    --card: 0 0% 100%;
+    --card: 240 14% 97%;
     --card-foreground: 222.2 84% 4.9%;
 
     --popover: 0 0% 100%;
@@ -52,10 +53,10 @@
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 222 13% 8%;
     --foreground: 210 40% 98%;
 
-    --card: 222.2 84% 4.9%;
+    --card: 224 15% 13%;
     --card-foreground: 210 40% 98%;
 
     --popover: 222.2 84% 4.9%;
@@ -96,6 +97,46 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-[#DAE1EA] text-[#2E3A59] transition-colors duration-300;
   }
+
+  .dark body {
+    @apply bg-[#0F121A] text-white;
+  }
+}
+
+/* Animações para transição entre modo claro e escuro */
+.dark-mode-transition {
+  transition: all 0.3s ease;
+}
+
+/* Bordas sutis para divisórias */
+.subtle-border {
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.dark .subtle-border {
+  border: 1px solid rgba(60, 60, 60, 0.1);
+}
+
+/* Efeito de gradiente para logos de evento */
+.event-logo-border {
+  position: relative;
+}
+
+.event-logo-border::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(to right, #467BCA, #77D1A8);
+  border-radius: 9999px;
+  z-index: 0;
+}
+
+.event-logo-border > * {
+  position: relative;
+  z-index: 1;
 }

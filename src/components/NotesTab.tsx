@@ -51,23 +51,23 @@ const NotesTab = ({ notes, onAddNote, onUpdateNote, onDeleteNote }: NotesTabProp
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
         {notes.length > 0 ? (
           notes.map((note) => (
-            <div key={note.id} className="bg-gray-50/40 rounded-lg border border-gray-200/30 p-4 hover:bg-gray-50/60 transition-all duration-200">
+            <div key={note.id} className="bg-[#F6F7FB] dark:bg-[#1A1F2B] rounded-lg border border-[rgba(0,0,0,0.05)] dark:border-[rgba(60,60,60,0.1)] p-4 hover:bg-[#F0F2F7] dark:hover:bg-[#212736] transition-all duration-200 shadow-sm">
               <div className="flex items-start justify-between mb-3">
-                <h4 className="font-semibold text-[#122A3A] text-sm line-clamp-2 flex-1 text-left">{note.title}</h4>
+                <h4 className="font-semibold text-[#2E3A59] dark:text-white text-sm line-clamp-2 flex-1 text-left">{note.title}</h4>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => handleEditNote(note)}
-                  className="w-6 h-6 p-0 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors duration-200 flex-shrink-0 ml-2"
+                  className="w-6 h-6 p-0 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 rounded-md transition-colors duration-200 flex-shrink-0 ml-2"
                 >
                   <Edit className="w-3 h-3" />
                 </Button>
               </div>
               
-              <p className="text-[#122A3A]/60 text-xs mb-3 line-clamp-3 leading-relaxed text-left">{note.subject}</p>
+              <p className="text-[#3B4D63] dark:text-gray-300 text-xs mb-3 line-clamp-3 leading-relaxed text-left">{note.subject}</p>
               
               <div className="flex items-center justify-between text-xs">
-                <span className="text-[#122A3A]/50 font-medium">
+                <span className="text-[#3B4D63]/50 dark:text-gray-400 font-medium">
                   {note.date.toLocaleDateString('pt-BR')}
                 </span>
                 <span className="bg-gradient-to-r from-[#467BCA] to-[#77D1A8] text-white px-2 py-1 rounded-full text-xs font-medium">
@@ -77,10 +77,10 @@ const NotesTab = ({ notes, onAddNote, onUpdateNote, onDeleteNote }: NotesTabProp
             </div>
           ))
         ) : (
-          <div className="col-span-full text-left py-20 bg-white rounded-xl border border-gray-200 shadow-sm px-6">
+          <div className="col-span-full text-left py-20 bg-[#F6F7FB] dark:bg-[#1A1F2B] rounded-xl border border-[rgba(0,0,0,0.05)] dark:border-[rgba(60,60,60,0.1)] shadow-sm px-6">
             <div className="text-6xl mb-6">📝</div>
-            <p className="text-xl font-medium text-[#122A3A] mb-3">Nenhuma anotação</p>
-            <p className="text-base text-[#122A3A]/70">Clique em "Nova Anotação" para começar</p>
+            <p className="text-xl font-medium text-[#2E3A59] dark:text-white mb-3">Nenhuma anotação</p>
+            <p className="text-base text-[#3B4D63] dark:text-gray-300">Clique em "Nova Anotação" para começar</p>
           </div>
         )}
       </div>

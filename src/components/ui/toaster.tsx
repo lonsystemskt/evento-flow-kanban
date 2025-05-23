@@ -13,7 +13,9 @@ export function Toaster() {
   const { toasts } = useToast();
 
   // Traduções para mensagens comuns
-  const translateTitle = (title: string) => {
+  const translateTitle = (title: string | undefined) => {
+    if (!title) return "";
+    
     const translations: Record<string, string> = {
       'Success': 'Sucesso',
       'Error': 'Erro',
@@ -23,7 +25,9 @@ export function Toaster() {
     return translations[title] || title;
   };
 
-  const translateDescription = (description: string) => {
+  const translateDescription = (description: string | undefined) => {
+    if (!description) return "";
+    
     const translations: Record<string, string> = {
       'Event created successfully': 'Evento criado com sucesso',
       'Event updated successfully': 'Evento atualizado com sucesso',
@@ -64,9 +68,9 @@ export function Toaster() {
         return (
           <Toast key={id} {...props}>
             <div className="grid gap-1">
-              {title && <ToastTitle>{translateTitle(title)}</ToastTitle>}
+              {title && <ToastTitle>{translateTitle(title.toString())}</ToastTitle>}
               {description && (
-                <ToastDescription>{translateDescription(description)}</ToastDescription>
+                <ToastDescription>{translateDescription(description.toString())}</ToastDescription>
               )}
             </div>
             {action}
