@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus } from 'lucide-react';
@@ -9,7 +9,14 @@ import OverviewTab from './OverviewTab';
 import CRMTab from './CRMTab';
 import NotesTab from './NotesTab';
 import DemandModal from './DemandModal';
-import { v4 as uuidv4 } from 'uuid';
+import { useToast } from "@/components/ui/use-toast";
+import {
+  fetchEvents, createEvent, updateEvent, deleteEvent,
+  fetchDemands, createDemand, updateDemand, deleteDemand,
+  fetchCRMRecords, createCRMRecord, updateCRMRecord, deleteCRMRecord,
+  fetchNotes, createNote, updateNote, deleteNote,
+  setupRealtimeSubscriptions
+} from '@/services/supabaseService';
 
 const EventManagementSystem = () => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -20,9 +27,106 @@ const EventManagementSystem = () => {
   const [isDemandModalOpen, setIsDemandModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [editingDemand, setEditingDemand] = useState<Demand | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
-  console.log('EventManagementSystem rendering with events:', events);
+  // Initial data load
+  useEffect(() => {
+    const loadAllData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Load events and demands
+        const eventsData = await fetchEvents();
+        const demandsData = await fetchDemands();
 
+        // Associate demands with their events
+        const eventsWithDemands = eventsData.map(event => ({
+          ...event,
+          demands: demandsData.filter(demand => demand.eventId === event.id)
+        }));
+
+        setEvents(eventsWithDemands);
+        
+        // Load CRM records
+        const crmData = await fetchCRMRecords();
+        setCrmRecords(crmData);
+        
+        // Load notes
+        const notesData = await fetchNotes();
+        setNotes(notesData);
+        
+      } catch (error) {
+        console.error('Error loading data:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load data. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadAllData();
+  }, [toast]);
+
+  // Set up real-time subscriptions
+  useEffect(() => {
+    const cleanup = setupRealtimeSubscriptions(
+      // Events change handler
+      async () => {
+        try {
+          const eventsData = await fetchEvents();
+          const demandsData = await fetchDemands();
+          
+          const eventsWithDemands = eventsData.map(event => ({
+            ...event,
+            demands: demandsData.filter(demand => demand.eventId === event.id)
+          }));
+          
+          setEvents(eventsWithDemands);
+        } catch (error) {
+          console.error('Error updating events in real-time:', error);
+        }
+      },
+      // Demands change handler
+      async () => {
+        try {
+          const demandsData = await fetchDemands();
+          
+          setEvents(prevEvents => prevEvents.map(event => ({
+            ...event,
+            demands: demandsData.filter(demand => demand.eventId === event.id)
+          })));
+        } catch (error) {
+          console.error('Error updating demands in real-time:', error);
+        }
+      },
+      // CRM change handler
+      async () => {
+        try {
+          const crmData = await fetchCRMRecords();
+          setCrmRecords(crmData);
+        } catch (error) {
+          console.error('Error updating CRM records in real-time:', error);
+        }
+      },
+      // Notes change handler
+      async () => {
+        try {
+          const notesData = await fetchNotes();
+          setNotes(notesData);
+        } catch (error) {
+          console.error('Error updating notes in real-time:', error);
+        }
+      }
+    );
+
+    return cleanup;
+  }, []);
+
+  // Current date and time string
   const getCurrentDateTime = () => {
     const now = new Date();
     const day = now.toLocaleDateString('pt-BR', { weekday: 'long' });
@@ -31,141 +135,207 @@ const EventManagementSystem = () => {
     return `Bem-vindo! Hoje é ${day}, ${date} - ${time}`;
   };
 
-  const handleCreateEvent = (eventData: Omit<Event, 'id' | 'archived' | 'demands'>) => {
-    const newEvent: Event = {
-      ...eventData,
-      id: uuidv4(),
-      archived: false,
-      demands: []
-    };
-    console.log('Creating new event:', newEvent);
-    setEvents(prev => [...prev, newEvent]);
-    setIsEventModalOpen(false);
+  // Event handlers
+  const handleCreateEvent = async (eventData: Omit<Event, 'id' | 'archived' | 'demands'>) => {
+    try {
+      const newEvent = await createEvent(eventData);
+      setEvents(prev => [...prev, { ...newEvent, demands: [] }]);
+      setIsEventModalOpen(false);
+      toast({
+        title: "Success",
+        description: "Event created successfully",
+      });
+    } catch (error) {
+      console.error('Error creating event:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create event. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleEditEvent = (eventData: Omit<Event, 'id' | 'archived' | 'demands'>) => {
+  const handleEditEvent = async (eventData: Omit<Event, 'id' | 'archived' | 'demands'>) => {
     if (!editingEvent) return;
     
-    setEvents(prev => prev.map(event => 
-      event.id === editingEvent.id 
-        ? { ...event, ...eventData }
-        : event
-    ));
-    setEditingEvent(null);
-    setIsEventModalOpen(false);
-  };
-
-  const handleArchiveEvent = (eventId: string) => {
-    setEvents(prev => prev.map(event => 
-      event.id === eventId 
-        ? { ...event, archived: true }
-        : event
-    ));
-  };
-
-  const handleDeleteEvent = (eventId: string) => {
-    setEvents(prev => prev.filter(event => event.id !== eventId));
-  };
-
-  const handleRestoreEvent = (eventId: string) => {
-    setEvents(prev => prev.map(event => 
-      event.id === eventId 
-        ? { ...event, archived: false }
-        : event
-    ));
-  };
-
-  const handleAddDemand = (eventId: string, demandData: Omit<Demand, 'id' | 'eventId' | 'completed' | 'urgency'>) => {
-    console.log('Adding demand to event:', eventId, demandData);
-    
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    
-    let urgency: Demand['urgency'] = 'future';
-    const demandDate = new Date(demandData.date);
-    demandDate.setHours(0, 0, 0, 0);
-    
-    if (demandDate < today) {
-      urgency = 'overdue';
-    } else if (demandDate.getTime() === today.getTime()) {
-      urgency = 'today';
-    } else if (demandDate.getTime() === tomorrow.getTime()) {
-      urgency = 'tomorrow';
+    try {
+      await updateEvent(editingEvent.id, eventData);
+      
+      setEvents(prev => prev.map(event => 
+        event.id === editingEvent.id 
+          ? { ...event, ...eventData }
+          : event
+      ));
+      
+      setEditingEvent(null);
+      setIsEventModalOpen(false);
+      toast({
+        title: "Success",
+        description: "Event updated successfully",
+      });
+    } catch (error) {
+      console.error('Error editing event:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update event. Please try again.",
+        variant: "destructive"
+      });
     }
-
-    const newDemand: Demand = {
-      ...demandData,
-      id: uuidv4(),
-      eventId,
-      completed: false,
-      urgency
-    };
-
-    console.log('New demand created:', newDemand);
-
-    setEvents(prev => prev.map(event => 
-      event.id === eventId 
-        ? { ...event, demands: [...event.demands, newDemand] }
-        : event
-    ));
   };
 
-  const handleUpdateDemand = (eventId: string, demandId: string, demandData: Partial<Demand>) => {
-    console.log('Updating demand:', eventId, demandId, demandData);
-    
-    setEvents(prev => prev.map(event => 
-      event.id === eventId 
-        ? {
-            ...event,
-            demands: event.demands.map(demand => {
-              if (demand.id === demandId) {
-                const updatedDemand = { ...demand, ...demandData };
-                
-                // Recalculate urgency if date is updated
-                if (demandData.date) {
-                  const today = new Date();
-                  today.setHours(0, 0, 0, 0);
-                  
-                  const tomorrow = new Date(today);
-                  tomorrow.setDate(tomorrow.getDate() + 1);
-                  
-                  const demandDate = new Date(demandData.date);
-                  demandDate.setHours(0, 0, 0, 0);
-                  
-                  if (demandDate < today) {
-                    updatedDemand.urgency = 'overdue';
-                  } else if (demandDate.getTime() === today.getTime()) {
-                    updatedDemand.urgency = 'today';
-                  } else if (demandDate.getTime() === tomorrow.getTime()) {
-                    updatedDemand.urgency = 'tomorrow';
-                  } else {
-                    updatedDemand.urgency = 'future';
-                  }
-                }
-                
-                return updatedDemand;
-              }
-              return demand;
-            })
-          }
-        : event
-    ));
+  const handleArchiveEvent = async (eventId: string) => {
+    try {
+      await updateEvent(eventId, { archived: true });
+      
+      setEvents(prev => prev.map(event => 
+        event.id === eventId 
+          ? { ...event, archived: true }
+          : event
+      ));
+      
+      toast({
+        title: "Success",
+        description: "Event archived successfully",
+      });
+    } catch (error) {
+      console.error('Error archiving event:', error);
+      toast({
+        title: "Error",
+        description: "Failed to archive event. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleDeleteDemand = (eventId: string, demandId: string) => {
-    console.log('Deleting demand:', eventId, demandId);
-    
-    setEvents(prev => prev.map(event => 
-      event.id === eventId 
-        ? {
-            ...event,
-            demands: event.demands.filter(demand => demand.id !== demandId)
-          }
-        : event
-    ));
+  const handleDeleteEvent = async (eventId: string) => {
+    try {
+      await deleteEvent(eventId);
+      setEvents(prev => prev.filter(event => event.id !== eventId));
+      toast({
+        title: "Success",
+        description: "Event deleted successfully",
+      });
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete event. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleRestoreEvent = async (eventId: string) => {
+    try {
+      await updateEvent(eventId, { archived: false });
+      
+      setEvents(prev => prev.map(event => 
+        event.id === eventId 
+          ? { ...event, archived: false }
+          : event
+      ));
+      
+      toast({
+        title: "Success",
+        description: "Event restored successfully",
+      });
+    } catch (error) {
+      console.error('Error restoring event:', error);
+      toast({
+        title: "Error",
+        description: "Failed to restore event. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleAddDemand = async (eventId: string, demandData: Omit<Demand, 'id' | 'eventId' | 'completed' | 'urgency'>) => {
+    try {
+      const newDemand = await createDemand({ ...demandData, eventId });
+      
+      setEvents(prev => prev.map(event => 
+        event.id === eventId 
+          ? { ...event, demands: [...event.demands, newDemand] }
+          : event
+      ));
+      
+      toast({
+        title: "Success",
+        description: "Demand added successfully",
+      });
+    } catch (error) {
+      console.error('Error adding demand:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add demand. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleUpdateDemand = async (eventId: string, demandId: string, demandData: Partial<Demand>) => {
+    try {
+      await updateDemand(demandId, demandData);
+      
+      // Find the demand to update
+      const eventIndex = events.findIndex(event => event.id === eventId);
+      if (eventIndex === -1) return;
+      
+      const demandIndex = events[eventIndex].demands.findIndex(demand => demand.id === demandId);
+      if (demandIndex === -1) return;
+      
+      // Create a copy of the events array and update the specific demand
+      const updatedEvents = [...events];
+      updatedEvents[eventIndex] = {
+        ...updatedEvents[eventIndex],
+        demands: [
+          ...updatedEvents[eventIndex].demands.slice(0, demandIndex),
+          { ...updatedEvents[eventIndex].demands[demandIndex], ...demandData },
+          ...updatedEvents[eventIndex].demands.slice(demandIndex + 1)
+        ]
+      };
+      
+      setEvents(updatedEvents);
+      
+      toast({
+        title: "Success",
+        description: "Demand updated successfully",
+      });
+    } catch (error) {
+      console.error('Error updating demand:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update demand. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteDemand = async (eventId: string, demandId: string) => {
+    try {
+      await deleteDemand(demandId);
+      
+      setEvents(prev => prev.map(event => 
+        event.id === eventId 
+          ? {
+              ...event,
+              demands: event.demands.filter(demand => demand.id !== demandId)
+            }
+          : event
+      ));
+      
+      toast({
+        title: "Success",
+        description: "Demand deleted successfully",
+      });
+    } catch (error) {
+      console.error('Error deleting demand:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete demand. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleEditDemandFromOverview = (demand: Demand) => {
@@ -173,50 +343,130 @@ const EventManagementSystem = () => {
     setIsDemandModalOpen(true);
   };
 
-  const handleSaveDemandFromOverview = (demandData: Omit<Demand, 'id' | 'eventId' | 'completed' | 'urgency'>) => {
+  const handleSaveDemandFromOverview = async (demandData: Omit<Demand, 'id' | 'eventId' | 'completed' | 'urgency'>) => {
     if (editingDemand) {
-      handleUpdateDemand(editingDemand.eventId, editingDemand.id, demandData);
+      await handleUpdateDemand(editingDemand.eventId, editingDemand.id, demandData);
     }
     setIsDemandModalOpen(false);
     setEditingDemand(null);
   };
 
   // CRM handlers
-  const handleAddCRM = (crmData: Omit<CRM, 'id'>) => {
-    const newCRM: CRM = {
-      ...crmData,
-      id: uuidv4()
-    };
-    setCrmRecords(prev => [...prev, newCRM]);
+  const handleAddCRM = async (crmData: Omit<CRM, 'id'>) => {
+    try {
+      const newCRM = await createCRMRecord(crmData);
+      setCrmRecords(prev => [...prev, newCRM]);
+      toast({
+        title: "Success",
+        description: "CRM record added successfully",
+      });
+    } catch (error) {
+      console.error('Error adding CRM record:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add CRM record. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleUpdateCRM = (id: string, crmData: Partial<CRM>) => {
-    setCrmRecords(prev => prev.map(crm => 
-      crm.id === id ? { ...crm, ...crmData } : crm
-    ));
+  const handleUpdateCRM = async (id: string, crmData: Partial<CRM>) => {
+    try {
+      await updateCRMRecord(id, crmData);
+      
+      setCrmRecords(prev => prev.map(crm => 
+        crm.id === id ? { ...crm, ...crmData } : crm
+      ));
+      
+      toast({
+        title: "Success",
+        description: "CRM record updated successfully",
+      });
+    } catch (error) {
+      console.error('Error updating CRM record:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update CRM record. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleDeleteCRM = (id: string) => {
-    setCrmRecords(prev => prev.filter(crm => crm.id !== id));
+  const handleDeleteCRM = async (id: string) => {
+    try {
+      await deleteCRMRecord(id);
+      setCrmRecords(prev => prev.filter(crm => crm.id !== id));
+      toast({
+        title: "Success",
+        description: "CRM record deleted successfully",
+      });
+    } catch (error) {
+      console.error('Error deleting CRM record:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete CRM record. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   // Notes handlers
-  const handleAddNote = (noteData: Omit<Note, 'id'>) => {
-    const newNote: Note = {
-      ...noteData,
-      id: uuidv4()
-    };
-    setNotes(prev => [...prev, newNote]);
+  const handleAddNote = async (noteData: Omit<Note, 'id'>) => {
+    try {
+      const newNote = await createNote(noteData);
+      setNotes(prev => [...prev, newNote]);
+      toast({
+        title: "Success",
+        description: "Note added successfully",
+      });
+    } catch (error) {
+      console.error('Error adding note:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add note. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleUpdateNote = (id: string, noteData: Partial<Note>) => {
-    setNotes(prev => prev.map(note => 
-      note.id === id ? { ...note, ...noteData } : note
-    ));
+  const handleUpdateNote = async (id: string, noteData: Partial<Note>) => {
+    try {
+      await updateNote(id, noteData);
+      
+      setNotes(prev => prev.map(note => 
+        note.id === id ? { ...note, ...noteData } : note
+      ));
+      
+      toast({
+        title: "Success",
+        description: "Note updated successfully",
+      });
+    } catch (error) {
+      console.error('Error updating note:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update note. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleDeleteNote = (id: string) => {
-    setNotes(prev => prev.filter(note => note.id !== id));
+  const handleDeleteNote = async (id: string) => {
+    try {
+      await deleteNote(id);
+      setNotes(prev => prev.filter(note => note.id !== id));
+      toast({
+        title: "Success",
+        description: "Note deleted successfully",
+      });
+    } catch (error) {
+      console.error('Error deleting note:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete note. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const activeEvents = events.filter(event => !event.archived);
@@ -225,9 +475,16 @@ const EventManagementSystem = () => {
     event.demands.filter(demand => demand.completed)
   );
 
-  console.log('Active events:', activeEvents);
-  console.log('Archived events:', archivedEvents);
-  console.log('Completed demands:', completedDemands);
+  if (isLoading) {
+    return (
+      <div className="min-h-screen p-5 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-xl font-medium text-[#122A3A]">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-5 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20" style={{ margin: '20px' }}>

@@ -9,7 +9,149 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      crm_records: {
+        Row: {
+          completed: boolean
+          contact: string
+          created_at: string | null
+          date: string
+          email: string
+          file: string | null
+          id: string
+          name: string
+          subject: string
+          updated_at: string | null
+        }
+        Insert: {
+          completed?: boolean
+          contact: string
+          created_at?: string | null
+          date: string
+          email: string
+          file?: string | null
+          id?: string
+          name: string
+          subject: string
+          updated_at?: string | null
+        }
+        Update: {
+          completed?: boolean
+          contact?: string
+          created_at?: string | null
+          date?: string
+          email?: string
+          file?: string | null
+          id?: string
+          name?: string
+          subject?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      demands: {
+        Row: {
+          completed: boolean
+          created_at: string | null
+          date: string
+          event_id: string
+          id: string
+          subject: string
+          title: string
+          updated_at: string | null
+          urgency: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string | null
+          date: string
+          event_id: string
+          id?: string
+          subject: string
+          title: string
+          updated_at?: string | null
+          urgency: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string | null
+          date?: string
+          event_id?: string
+          id?: string
+          subject?: string
+          title?: string
+          updated_at?: string | null
+          urgency?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demands_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          archived: boolean
+          created_at: string | null
+          date: string
+          id: string
+          logo: string | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          archived?: boolean
+          created_at?: string | null
+          date: string
+          id?: string
+          logo?: string | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          archived?: boolean
+          created_at?: string | null
+          date?: string
+          id?: string
+          logo?: string | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      notes: {
+        Row: {
+          author: string
+          created_at: string | null
+          date: string
+          id: string
+          subject: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          author: string
+          created_at?: string | null
+          date: string
+          id?: string
+          subject: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          author?: string
+          created_at?: string | null
+          date?: string
+          id?: string
+          subject?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
