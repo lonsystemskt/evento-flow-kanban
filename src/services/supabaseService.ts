@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Event, Demand, CRM, Note } from '@/types/event';
 
@@ -257,7 +258,7 @@ export const createCRMRecord = async (crm: Omit<CRM, 'id'>): Promise<CRM> => {
     file: data.file,
     date: new Date(data.date),
     completed: data.completed,
-    status: data.status || 'Ativo', // Default to 'Ativo' if not set
+    status: (data.status === 'Inativo' ? 'Inativo' : 'Ativo') as CRM['status'], // Type assertion with fallback
   };
 };
 
