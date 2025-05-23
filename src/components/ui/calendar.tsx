@@ -12,13 +12,12 @@ function Calendar({
   className,
   classNames,
   showOutsideDays = true,
-  onSelect,
   ...props
 }: CalendarProps) {
   const handleDayClick = (day: Date, modifiers: any) => {
     if (!modifiers.disabled) {
-      if (onSelect) {
-        onSelect(day);
+      if (props.onSelect) {
+        props.onSelect(day);
       }
       
       // Close popover after selection
@@ -75,7 +74,6 @@ function Calendar({
         IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
       }}
       onDayClick={handleDayClick}
-      onSelect={onSelect}
       {...props}
     />
   );

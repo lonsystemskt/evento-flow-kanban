@@ -7,7 +7,7 @@ import { Event, Demand } from '@/types/event';
 interface OverviewTabProps {
   events: Event[];
   onEditDemand: (demand: Demand) => void;
-  onCompleteDemand: (eventId: string, demandId: string) => void;
+  onCompleteDemand: (eventId: string, demandId: string, demandData: Partial<Demand>) => void;
 }
 
 const OverviewTab = ({ events, onEditDemand, onCompleteDemand }: OverviewTabProps) => {
@@ -80,7 +80,7 @@ const OverviewTab = ({ events, onEditDemand, onCompleteDemand }: OverviewTabProp
                 </Button>
                 <Button
                   size="sm"
-                  onClick={() => onCompleteDemand(demand.eventId, demand.id)}
+                  onClick={() => onCompleteDemand(demand.eventId, demand.id, { completed: true })}
                   className="bg-gradient-to-r from-[#467BCA] to-[#77D1A8] hover:opacity-90 text-white px-3 py-1 h-8 text-xs font-medium rounded-md transition-all duration-200 hover:scale-105"
                 >
                   <Check className="w-4 h-4 mr-1" />
