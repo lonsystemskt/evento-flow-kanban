@@ -478,7 +478,7 @@ const EventManagementSystem = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen w-full pl-[30px] pr-[30px] pt-[25px] pb-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 flex items-center justify-center">
+      <div className="min-h-screen w-full pl-[30px] pr-[30px] pt-[25px] pb-0 bg-[#F6F7FB] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-xl font-medium text-[#122A3A]">Carregando...</p>
@@ -488,7 +488,7 @@ const EventManagementSystem = () => {
   }
 
   return (
-    <div className="min-h-screen w-full pl-[30px] pr-[30px] pt-[25px] pb-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20">
+    <div className="min-h-screen w-full pl-[30px] pr-[30px] pt-[25px] pb-0 bg-[#F6F7FB]">
       <div className="w-full">
         <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="text-left">
@@ -501,7 +501,7 @@ const EventManagementSystem = () => {
               setEditingEvent(null);
               setIsEventModalOpen(true);
             }}
-            className="bg-gradient-to-r from-[#467BCA] to-[#77D1A8] hover:opacity-90 text-white px-6 py-3 rounded-xl flex items-center gap-3 transition-all duration-200 shadow-lg hover:shadow-xl text-base font-medium"
+            className="bg-gradient-to-r from-[#467BCA] to-[#77D1A8] hover:opacity-90 text-white px-6 py-3 rounded-xl flex items-center gap-3 transition-all duration-200 text-base font-medium"
           >
             <Plus className="w-5 h-5" />
             Novo Evento
@@ -510,7 +510,7 @@ const EventManagementSystem = () => {
 
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabType)} className="space-y-6">
           <div className="flex justify-end mb-4">
-            <TabsList className="bg-white border border-gray-200 rounded-xl shadow-md p-1">
+            <TabsList className="bg-white border border-gray-200 rounded-xl p-1">
               <TabsTrigger value="demands" className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA]/10 data-[state=active]:to-[#77D1A8]/10 data-[state=active]:text-[#122A3A] rounded-lg px-5 py-3">
                 Demandas ({activeEvents.length})
               </TabsTrigger>
@@ -551,7 +551,7 @@ const EventManagementSystem = () => {
               ))}
               
               {activeEvents.length === 0 && (
-                <div className="text-center py-20 bg-white rounded-xl border border-gray-200 shadow-md">
+                <div className="text-center py-20 bg-white rounded-xl border border-gray-200">
                   <div className="text-6xl mb-6">📅</div>
                   <p className="text-xl font-medium text-[#122A3A] mb-3">Nenhum evento criado ainda</p>
                   <p className="text-base text-[#122A3A]/70">Clique em "Novo Evento" para começar</p>
@@ -589,7 +589,7 @@ const EventManagementSystem = () => {
           <TabsContent value="archived">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {archivedEvents.map(event => (
-                <div key={event.id} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between transition-all duration-200 hover:shadow-md">
+                <div key={event.id} className="bg-white p-4 rounded-xl border border-gray-100 flex items-center justify-between transition-all duration-200">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
                       {event.logo ? (
@@ -613,7 +613,7 @@ const EventManagementSystem = () => {
               ))}
               
               {archivedEvents.length === 0 && (
-                <div className="col-span-full text-center py-16 bg-white rounded-xl border border-gray-100 shadow-sm">
+                <div className="col-span-full text-center py-16 bg-white rounded-xl border border-gray-100">
                   <div className="text-5xl mb-4">📦</div>
                   <p className="text-base font-medium text-[#122A3A]">Nenhum evento arquivado</p>
                 </div>
@@ -626,7 +626,7 @@ const EventManagementSystem = () => {
               {completedDemands.map(demand => {
                 const event = events.find(e => e.id === demand.eventId);
                 return (
-                  <div key={demand.id} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm transition-all duration-200 hover:shadow-md">
+                  <div key={demand.id} className="bg-white p-4 rounded-xl border border-gray-100 transition-all duration-200">
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="font-bold text-[#122A3A] text-sm">{demand.title}</h3>
                       <div className="w-3 h-3 bg-green-500 rounded-full"></div>
@@ -645,7 +645,7 @@ const EventManagementSystem = () => {
               })}
               
               {completedDemands.length === 0 && (
-                <div className="col-span-full text-center py-16 bg-white rounded-xl border border-gray-100 shadow-sm">
+                <div className="col-span-full text-center py-16 bg-white rounded-xl border border-gray-100">
                   <div className="text-5xl mb-4">✅</div>
                   <p className="text-base font-medium text-[#122A3A]">Nenhuma demanda concluída</p>
                 </div>
