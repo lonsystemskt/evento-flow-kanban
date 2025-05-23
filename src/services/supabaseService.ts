@@ -767,7 +767,13 @@ export const setupRealtimeSubscriptions = (
           table: tableName 
         },
         (payload) => {
-          console.log(`🔥🔥🔥 REAL-TIME ${tableName.toUpperCase()} DETECTED:`, payload.eventType, payload.new?.id || payload.old?.id);
+          const recordId = (payload.new && typeof payload.new === 'object' && 'id' in payload.new) ? 
+            payload.new.id : 
+            (payload.old && typeof payload.old === 'object' && 'id' in payload.old) ? 
+              payload.old.id : 
+              'unknown';
+          
+          console.log(`🔥🔥🔥 REAL-TIME ${tableName.toUpperCase()} DETECTED:`, payload.eventType, recordId);
           handler();
         }
       )
