@@ -68,33 +68,32 @@ const EventRow = ({
   const activeDemands = event.demands.filter(demand => !demand.completed);
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200/60 shadow-sm hover:shadow-lg transition-all duration-300 p-4 relative overflow-hidden">
-      <div className="flex items-center gap-4 h-16">
+    <div className="bg-white rounded-lg border border-gray-100 hover:border-gray-200 transition-all duration-200 p-3 relative overflow-hidden">
+      <div className="flex items-center gap-3 h-12">
         {/* Fixed Event Info Section - Left Side */}
-        <div className="flex items-center gap-3 w-80 flex-shrink-0">
+        <div className="flex items-center gap-2.5 w-72 flex-shrink-0">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center cursor-pointer hover:scale-105 transition-transform duration-200 shadow-md relative group">
+              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors duration-200 relative group">
                 {event.logo ? (
-                  <img src={event.logo} alt={event.name} className="w-12 h-12 rounded-full object-cover" />
+                  <img src={event.logo} alt={event.name} className="w-8 h-8 rounded-full object-cover" />
                 ) : (
-                  <span className="text-white font-bold text-sm">{event.name.charAt(0).toUpperCase()}</span>
+                  <span className="text-gray-600 font-medium text-xs">{event.name.charAt(0).toUpperCase()}</span>
                 )}
-                <div className="absolute inset-0 bg-black/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
               </div>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-48 bg-white/95 backdrop-blur-sm border border-slate-200/60">
-              <DropdownMenuItem onClick={() => onEditEvent(event)} className="cursor-pointer hover:bg-slate-50">
+            <DropdownMenuContent align="start" className="w-48 bg-white border border-gray-100">
+              <DropdownMenuItem onClick={() => onEditEvent(event)} className="cursor-pointer hover:bg-gray-50">
                 <Edit className="w-4 h-4 mr-2" />
                 Editar evento
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onArchiveEvent(event.id)} className="cursor-pointer hover:bg-slate-50">
+              <DropdownMenuItem onClick={() => onArchiveEvent(event.id)} className="cursor-pointer hover:bg-gray-50">
                 <Archive className="w-4 h-4 mr-2" />
                 Arquivar evento
               </DropdownMenuItem>
               <DropdownMenuItem 
                 onClick={() => onDeleteEvent(event.id)} 
-                className="cursor-pointer text-red-600 focus:text-red-600 hover:bg-red-50"
+                className="cursor-pointer text-red-500 focus:text-red-500 hover:bg-red-50"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
                 Excluir evento
@@ -103,16 +102,16 @@ const EventRow = ({
           </DropdownMenu>
 
           <div className="flex-1 min-w-0">
-            <h3 className="text-base font-semibold text-slate-800 truncate leading-tight">{event.name}</h3>
-            <p className="text-xs text-slate-500 mt-0.5">{event.date.toLocaleDateString('pt-BR')}</p>
+            <h3 className="text-sm font-medium text-gray-900 truncate leading-tight">{event.name}</h3>
+            <p className="text-xs text-gray-500 mt-0.5">{event.date.toLocaleDateString('pt-BR')}</p>
           </div>
 
           <Button
             onClick={handleAddDemand}
             size="sm"
-            className="w-8 h-8 rounded-full bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white p-0 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105 flex-shrink-0"
+            className="w-6 h-6 rounded-full bg-blue-500 hover:bg-blue-600 text-white p-0 transition-all duration-200 hover:scale-105 flex-shrink-0"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3 h-3" />
           </Button>
         </div>
 
@@ -125,24 +124,24 @@ const EventRow = ({
                 variant="ghost"
                 size="sm"
                 onClick={() => scroll('left')}
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-white/90 hover:bg-white shadow-md backdrop-blur-sm border border-slate-200/60 transition-all duration-200 hover:scale-105"
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-6 h-6 rounded-full bg-white hover:bg-gray-50 border border-gray-200 transition-all duration-200"
               >
-                <ChevronLeft className="w-3.5 h-3.5" />
+                <ChevronLeft className="w-3 h-3" />
               </Button>
               
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => scroll('right')}
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-white/90 hover:bg-white shadow-md backdrop-blur-sm border border-slate-200/60 transition-all duration-200 hover:scale-105"
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-6 h-6 rounded-full bg-white hover:bg-gray-50 border border-gray-200 transition-all duration-200"
               >
-                <ChevronRight className="w-3.5 h-3.5" />
+                <ChevronRight className="w-3 h-3" />
               </Button>
 
               {/* Cards Container */}
               <div 
                 ref={scrollContainerRef}
-                className="flex gap-3 overflow-x-auto scrollbar-hide py-1 px-8"
+                className="flex gap-2.5 overflow-x-auto scrollbar-hide py-1 px-7"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 {activeDemands.map(demand => (
@@ -157,8 +156,8 @@ const EventRow = ({
               </div>
             </>
           ) : (
-            <div className="text-center py-4 text-slate-400">
-              <p className="text-xs">Nenhuma demanda criada</p>
+            <div className="text-center py-3 text-gray-400">
+              <p className="text-xs">Sem demandas</p>
             </div>
           )}
         </div>

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -117,35 +116,35 @@ const EventManagementSystem = () => {
   );
 
   return (
-    <div className="min-h-screen p-2.5 bg-gradient-to-br from-slate-50/50 via-blue-50/30 to-indigo-50/50">
+    <div className="min-h-screen p-3 bg-gray-50/50">
       <div className="max-w-full mx-auto">
-        <header className="mb-6">
-          <h1 className="text-3xl font-bold text-slate-800 mb-1">Sistema de Gestão de Eventos</h1>
-          <p className="text-slate-600 text-sm">Organize seus eventos e demandas de forma visual e intuitiva</p>
+        <header className="mb-5">
+          <h1 className="text-2xl font-semibold text-gray-900 mb-1">Sistema de Gestão de Eventos</h1>
+          <p className="text-gray-600 text-sm">Organize seus eventos e demandas de forma visual e intuitiva</p>
         </header>
 
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabType)}>
-          <TabsList className="grid w-full grid-cols-3 mb-6 bg-white/80 backdrop-blur-sm border border-slate-200/60">
-            <TabsTrigger value="demands" className="text-sm font-medium data-[state=active]:bg-white">
-              Demandas ({activeEvents.length})
+          <TabsList className="grid w-full grid-cols-3 mb-5 bg-white border border-gray-200">
+            <TabsTrigger value="demands" className="text-sm font-medium data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600">
+              Início ({activeEvents.length})
             </TabsTrigger>
-            <TabsTrigger value="archived" className="text-sm font-medium data-[state=active]:bg-white">
-              Eventos Arquivados ({archivedEvents.length})
+            <TabsTrigger value="archived" className="text-sm font-medium data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600">
+              Arquivadas ({archivedEvents.length})
             </TabsTrigger>
-            <TabsTrigger value="completed" className="text-sm font-medium data-[state=active]:bg-white">
-              Demandas Concluídas ({completedDemands.length})
+            <TabsTrigger value="completed" className="text-sm font-medium data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600">
+              Concluídas ({completedDemands.length})
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="demands" className="space-y-2">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-slate-800">Eventos Ativos</h2>
+              <h2 className="text-lg font-medium text-gray-900">Eventos Ativos</h2>
               <Button 
                 onClick={() => {
                   setEditingEvent(null);
                   setIsEventModalOpen(true);
                 }}
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2 rounded-xl flex items-center gap-2 shadow-md transition-all duration-200 hover:shadow-lg hover:scale-105"
+                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all duration-200"
               >
                 <Plus className="w-4 h-4" />
                 Novo Evento
@@ -170,7 +169,7 @@ const EventManagementSystem = () => {
               ))}
               
               {activeEvents.length === 0 && (
-                <div className="text-center py-12 text-slate-500">
+                <div className="text-center py-12 text-gray-500">
                   <div className="text-4xl mb-3">📅</div>
                   <p className="text-base">Nenhum evento criado ainda</p>
                   <p className="text-sm">Clique em "Novo Evento" para começar</p>
@@ -182,25 +181,25 @@ const EventManagementSystem = () => {
           <TabsContent value="archived">
             <div className="space-y-2">
               {archivedEvents.map(event => (
-                <div key={event.id} className="bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-slate-200/60 flex items-center justify-between shadow-sm hover:shadow-md transition-all duration-300">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center">
+                <div key={event.id} className="bg-white p-3 rounded-lg border border-gray-100 flex items-center justify-between transition-all duration-200">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
                       {event.logo ? (
-                        <img src={event.logo} alt={event.name} className="w-10 h-10 rounded-full object-cover" />
+                        <img src={event.logo} alt={event.name} className="w-8 h-8 rounded-full object-cover" />
                       ) : (
-                        <span className="text-slate-600 font-semibold text-sm">{event.name.charAt(0)}</span>
+                        <span className="text-gray-600 font-medium text-xs">{event.name.charAt(0)}</span>
                       )}
                     </div>
                     <div>
-                      <h3 className="font-semibold text-slate-800 text-sm">{event.name}</h3>
-                      <p className="text-xs text-slate-600">{event.date.toLocaleDateString('pt-BR')}</p>
+                      <h3 className="font-medium text-gray-900 text-sm">{event.name}</h3>
+                      <p className="text-xs text-gray-600">{event.date.toLocaleDateString('pt-BR')}</p>
                     </div>
                   </div>
                   <Button 
                     onClick={() => handleRestoreEvent(event.id)}
                     variant="outline"
                     size="sm"
-                    className="border-slate-200 hover:bg-slate-50 transition-colors duration-200"
+                    className="border-gray-200 hover:bg-gray-50 transition-colors duration-200"
                   >
                     Restaurar
                   </Button>
@@ -208,7 +207,7 @@ const EventManagementSystem = () => {
               ))}
               
               {archivedEvents.length === 0 && (
-                <div className="text-center py-12 text-slate-500">
+                <div className="text-center py-12 text-gray-500">
                   <div className="text-4xl mb-3">📦</div>
                   <p className="text-base">Nenhum evento arquivado</p>
                 </div>
@@ -217,23 +216,23 @@ const EventManagementSystem = () => {
           </TabsContent>
 
           <TabsContent value="completed">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5">
               {completedDemands.map(demand => {
                 const event = events.find(e => e.id === demand.eventId);
                 return (
-                  <div key={demand.id} className="bg-white/80 backdrop-blur-sm p-3 rounded-xl border border-slate-200/60 shadow-sm hover:shadow-md transition-all duration-300">
+                  <div key={demand.id} className="bg-white p-3 rounded-lg border border-gray-100 transition-all duration-200">
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-semibold text-slate-800 text-sm">{demand.title}</h3>
-                      <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full"></div>
+                      <h3 className="font-medium text-gray-900 text-sm">{demand.title}</h3>
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     </div>
-                    <p className="text-xs text-slate-600 mb-2">{demand.subject}</p>
-                    <p className="text-xs text-slate-500 mb-1">{event?.name}</p>
-                    <p className="text-xs text-slate-500 mb-3">{demand.date.toLocaleDateString('pt-BR')}</p>
+                    <p className="text-xs text-gray-600 mb-2">{demand.subject}</p>
+                    <p className="text-xs text-gray-500 mb-1">{event?.name}</p>
+                    <p className="text-xs text-gray-500 mb-3">{demand.date.toLocaleDateString('pt-BR')}</p>
                     <Button 
                       onClick={() => handleUpdateDemand(demand.eventId, demand.id, { completed: false })}
                       variant="outline"
                       size="sm"
-                      className="w-full text-xs h-7 border-slate-200 hover:bg-slate-50 transition-colors duration-200"
+                      className="w-full text-xs h-6 border-gray-200 hover:bg-gray-50 transition-colors duration-200"
                     >
                       Restaurar
                     </Button>
@@ -242,7 +241,7 @@ const EventManagementSystem = () => {
               })}
               
               {completedDemands.length === 0 && (
-                <div className="col-span-full text-center py-12 text-slate-500">
+                <div className="col-span-full text-center py-12 text-gray-500">
                   <div className="text-4xl mb-3">✅</div>
                   <p className="text-base">Nenhuma demanda concluída</p>
                 </div>
