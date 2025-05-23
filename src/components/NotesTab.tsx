@@ -41,7 +41,7 @@ const NotesTab = ({ notes, onAddNote, onUpdateNote, onDeleteNote }: NotesTabProp
       <div className="flex justify-end">
         <Button 
           onClick={handleAddNote}
-          className="bg-gradient-to-r from-[#467BCA] to-[#77D1A8] hover:opacity-90 text-white px-6 py-3 rounded-xl flex items-center gap-3 transition-all duration-200 shadow-lg hover:shadow-xl text-lg font-medium"
+          className="bg-gradient-to-r from-[#467BCA] to-[#77D1A8] hover:opacity-90 text-white px-6 py-3 rounded-xl flex items-center gap-3 transition-all duration-200 shadow-lg hover:shadow-xl text-base font-medium"
         >
           <Plus className="w-5 h-5" />
           Nova Anotação
@@ -70,7 +70,7 @@ const NotesTab = ({ notes, onAddNote, onUpdateNote, onDeleteNote }: NotesTabProp
                 <span className="text-[#122A3A]/50 font-medium">
                   {note.date.toLocaleDateString('pt-BR')}
                 </span>
-                <span className="bg-gradient-to-r from-[#467BCA] to-[#77D1A8] text-white px-2 py-1 rounded-full text-[10px] font-medium">
+                <span className="bg-gradient-to-r from-[#467BCA] to-[#77D1A8] text-white px-2 py-1 rounded-full text-xs font-medium">
                   {note.author}
                 </span>
               </div>
@@ -80,7 +80,7 @@ const NotesTab = ({ notes, onAddNote, onUpdateNote, onDeleteNote }: NotesTabProp
           <div className="col-span-full text-center py-20 bg-white rounded-xl border border-gray-200 shadow-sm">
             <div className="text-6xl mb-6">📝</div>
             <p className="text-xl font-medium text-[#122A3A] mb-3">Nenhuma anotação</p>
-            <p className="text-lg text-[#122A3A]/70">Clique em "Nova Anotação" para começar</p>
+            <p className="text-base text-[#122A3A]/70">Clique em "Nova Anotação" para começar</p>
           </div>
         )}
       </div>

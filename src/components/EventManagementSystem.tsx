@@ -235,7 +235,7 @@ const EventManagementSystem = () => {
         <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-[#467BCA] to-[#77D1A8] inline-block text-transparent bg-clip-text mb-3">Lon Demandas</h1>
-            <p className="text-[#122A3A]/70 text-lg">{getCurrentDateTime()}</p>
+            <p className="text-[#122A3A]/70 text-base">{getCurrentDateTime()}</p>
           </div>
           
           <Button 
@@ -243,7 +243,7 @@ const EventManagementSystem = () => {
               setEditingEvent(null);
               setIsEventModalOpen(true);
             }}
-            className="bg-gradient-to-r from-[#467BCA] to-[#77D1A8] hover:opacity-90 text-white px-6 py-3 rounded-xl flex items-center gap-3 transition-all duration-200 shadow-lg hover:shadow-xl text-lg font-medium"
+            className="bg-gradient-to-r from-[#467BCA] to-[#77D1A8] hover:opacity-90 text-white px-6 py-3 rounded-xl flex items-center gap-3 transition-all duration-200 shadow-lg hover:shadow-xl text-base font-medium"
           >
             <Plus className="w-5 h-5" />
             Novo Evento
@@ -296,7 +296,7 @@ const EventManagementSystem = () => {
                 <div className="text-center py-20 bg-white rounded-xl border border-gray-200 shadow-md">
                   <div className="text-6xl mb-6">📅</div>
                   <p className="text-xl font-medium text-[#122A3A] mb-3">Nenhum evento criado ainda</p>
-                  <p className="text-lg text-[#122A3A]/70">Clique em "Novo Evento" para começar</p>
+                  <p className="text-base text-[#122A3A]/70">Clique em "Novo Evento" para começar</p>
                 </div>
               )}
             </div>
@@ -357,7 +357,7 @@ const EventManagementSystem = () => {
               {archivedEvents.length === 0 && (
                 <div className="col-span-full text-center py-16 bg-white rounded-xl border border-gray-100 shadow-sm">
                   <div className="text-5xl mb-4">📦</div>
-                  <p className="text-lg font-medium text-[#122A3A]">Nenhum evento arquivado</p>
+                  <p className="text-base font-medium text-[#122A3A]">Nenhum evento arquivado</p>
                 </div>
               )}
             </div>
@@ -389,7 +389,7 @@ const EventManagementSystem = () => {
               {completedDemands.length === 0 && (
                 <div className="col-span-full text-center py-16 bg-white rounded-xl border border-gray-100 shadow-sm">
                   <div className="text-5xl mb-4">✅</div>
-                  <p className="text-lg font-medium text-[#122A3A]">Nenhuma demanda concluída</p>
+                  <p className="text-base font-medium text-[#122A3A]">Nenhuma demanda concluída</p>
                 </div>
               )}
             </div>

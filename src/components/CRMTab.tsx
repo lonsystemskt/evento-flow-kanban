@@ -41,7 +41,7 @@ const CRMTab = ({ crmRecords, onAddCRM, onUpdateCRM, onDeleteCRM }: CRMTabProps)
       <div className="flex justify-end">
         <Button 
           onClick={handleAddCRM}
-          className="bg-gradient-to-r from-[#467BCA] to-[#77D1A8] hover:opacity-90 text-white px-6 py-3 rounded-xl flex items-center gap-3 transition-all duration-200 shadow-lg hover:shadow-xl text-lg font-medium"
+          className="bg-gradient-to-r from-[#467BCA] to-[#77D1A8] hover:opacity-90 text-white px-6 py-3 rounded-xl flex items-center gap-3 transition-all duration-200 shadow-lg hover:shadow-xl text-base font-medium"
         >
           <Plus className="w-5 h-5" />
           Novo Registro CRM
@@ -58,26 +58,26 @@ const CRMTab = ({ crmRecords, onAddCRM, onUpdateCRM, onDeleteCRM }: CRMTabProps)
 
                 {/* Name */}
                 <div className="min-w-0 w-40 flex-shrink-0">
-                  <p className="text-[10px] font-medium text-[#122A3A] truncate">{crm.name}</p>
+                  <p className="text-xs font-medium text-[#122A3A] truncate">{crm.name}</p>
                 </div>
 
                 {/* Contact */}
                 <div className="min-w-0 w-32 flex-shrink-0">
-                  <p className="text-[10px] text-[#122A3A]/60 truncate">{crm.contact}</p>
+                  <p className="text-xs text-[#122A3A]/60 truncate">{crm.contact}</p>
                 </div>
 
                 {/* Email */}
                 <div className="min-w-0 w-48 flex-shrink-0">
-                  <p className="text-[10px] text-[#122A3A]/60 truncate">{crm.email}</p>
+                  <p className="text-xs text-[#122A3A]/60 truncate">{crm.email}</p>
                 </div>
 
                 {/* Subject */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] text-[#122A3A] truncate">{crm.subject}</p>
+                  <p className="text-xs text-[#122A3A] truncate">{crm.subject}</p>
                 </div>
 
                 {/* Date */}
-                <div className="text-[10px] text-[#122A3A]/50 font-medium w-20 text-center flex-shrink-0">
+                <div className="text-xs text-[#122A3A]/50 font-medium w-20 text-center flex-shrink-0">
                   {crm.date.toLocaleDateString('pt-BR')}
                 </div>
 
@@ -87,7 +87,7 @@ const CRMTab = ({ crmRecords, onAddCRM, onUpdateCRM, onDeleteCRM }: CRMTabProps)
                     variant="ghost"
                     size="sm"
                     onClick={() => window.open(crm.file, '_blank')}
-                    className="text-[10px] text-blue-600 hover:text-blue-800 flex-shrink-0"
+                    className="text-xs text-blue-600 hover:text-blue-800 flex-shrink-0"
                   >
                     Ver arquivo
                   </Button>
@@ -123,7 +123,7 @@ const CRMTab = ({ crmRecords, onAddCRM, onUpdateCRM, onDeleteCRM }: CRMTabProps)
           <div className="text-center py-20 bg-white rounded-xl border border-gray-200 shadow-sm">
             <div className="text-6xl mb-6">📞</div>
             <p className="text-xl font-medium text-[#122A3A] mb-3">Nenhum registro CRM</p>
-            <p className="text-lg text-[#122A3A]/70">Clique em "Novo Registro CRM" para começar</p>
+            <p className="text-base text-[#122A3A]/70">Clique em "Novo Registro CRM" para começar</p>
           </div>
         )}
       </div>

@@ -94,7 +94,7 @@ const OverviewTab = ({ events, onEditDemand, onCompleteDemand }: OverviewTabProp
         <div className="text-center py-20 bg-white rounded-xl border border-gray-200 shadow-sm">
           <div className="text-6xl mb-6">📊</div>
           <p className="text-xl font-medium text-[#122A3A] mb-3">Nenhuma demanda ativa</p>
-          <p className="text-lg text-[#122A3A]/70">Todas as demandas foram concluídas</p>
+          <p className="text-base text-[#122A3A]/70">Todas as demandas foram concluídas</p>
         </div>
       )}
     </div>

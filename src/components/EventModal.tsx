@@ -80,7 +80,7 @@ const EventModal = ({ isOpen, onClose, onSave, editingEvent }: EventModalProps) 
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Digite o nome do evento"
-              className="w-full"
+              className="w-full text-sm"
             />
           </div>
 
@@ -91,7 +91,7 @@ const EventModal = ({ isOpen, onClose, onSave, editingEvent }: EventModalProps) 
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full justify-start text-left font-normal",
+                    "w-full justify-start text-left font-normal text-sm",
                     !date && "text-muted-foreground"
                   )}
                 >
@@ -142,13 +142,13 @@ const EventModal = ({ isOpen, onClose, onSave, editingEvent }: EventModalProps) 
         </div>
 
         <div className="flex justify-end gap-3">
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} className="text-sm">
             Cancelar
           </Button>
           <Button 
             onClick={handleSave}
             disabled={!name.trim() || !date}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            className="bg-blue-600 hover:bg-blue-700 text-white text-sm"
           >
             Salvar
           </Button>

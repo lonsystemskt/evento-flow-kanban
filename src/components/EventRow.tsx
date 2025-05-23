@@ -107,7 +107,7 @@ const EventRow = ({
 
           <div className="flex-1 min-w-0 max-w-[100px] flex flex-col">
             <h3 className="text-sm font-bold text-[#122A3A] truncate leading-tight mb-0.5">{event.name}</h3>
-            <p className="text-[11px] text-[#122A3A]/60 font-bold">{event.date.toLocaleDateString('pt-BR')}</p>
+            <p className="text-xs text-[#122A3A]/60 font-bold">{event.date.toLocaleDateString('pt-BR')}</p>
           </div>
 
           <Button
@@ -165,7 +165,7 @@ const EventRow = ({
           ) : (
             <div className="text-center py-3 text-[#122A3A]/50 bg-gray-50/20 rounded-lg border border-dashed border-gray-200/30">
               <p className="text-xs font-medium mb-0.5">Sem demandas</p>
-              <p className="text-[10px]">Clique no botão + para criar uma nova demanda</p>
+              <p className="text-xs">Clique no botão + para criar uma nova demanda</p>
             </div>
           )}
         </div>

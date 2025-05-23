@@ -41,10 +41,10 @@ const DemandCard = ({ demand, onEdit, onDelete, onComplete }: DemandCardProps) =
   };
 
   return (
-    <div className="min-w-[186px] max-w-[186px] min-h-[88px] bg-gray-50/40 rounded-lg border border-gray-200/30 flex flex-col p-3">
+    <div className="min-w-[196px] max-w-[196px] min-h-[88px] bg-gray-50/40 rounded-lg border border-gray-200/30 flex flex-col p-3">
       {/* Urgency Indicator */}
       <div className="flex items-center justify-between mb-2">
-        <span className={`px-1.5 py-0.5 text-[10px] font-medium rounded-md text-white ${getUrgencyColor(demand.urgency)}`}>
+        <span className={`px-1.5 py-0.5 text-xs font-medium rounded-md text-white ${getUrgencyColor(demand.urgency)}`}>
           {getUrgencyText(demand.urgency)}
         </span>
         <div 
@@ -55,13 +55,13 @@ const DemandCard = ({ demand, onEdit, onDelete, onComplete }: DemandCardProps) =
 
       {/* Content - Takes available space */}
       <div className="flex-1 flex flex-col mb-2">
-        <h4 className="font-semibold text-[#122A3A] text-[13px] mb-1 line-clamp-2 leading-tight">
+        <h4 className="font-semibold text-[#122A3A] text-sm mb-1 line-clamp-2 leading-tight">
           {demand.title || 'Título não informado'}
         </h4>
-        <p className="text-[#122A3A]/60 text-[10px] mb-1 line-clamp-2 leading-relaxed flex-1">
+        <p className="text-[#122A3A]/60 text-xs mb-1 line-clamp-2 leading-relaxed flex-1">
           {demand.subject || 'Assunto não informado'}
         </p>
-        <p className="text-[#122A3A]/50 text-[10px] font-medium">
+        <p className="text-[#122A3A]/50 text-xs font-medium">
           {demand.date ? demand.date.toLocaleDateString('pt-BR') : 'Data não informada'}
         </p>
       </div>
@@ -90,7 +90,7 @@ const DemandCard = ({ demand, onEdit, onDelete, onComplete }: DemandCardProps) =
         <Button
           size="sm"
           onClick={onComplete}
-          className="bg-gradient-to-r from-[#467BCA] to-[#77D1A8] hover:opacity-90 text-white px-2 py-1 h-6 text-[9px] font-medium rounded-md transition-all duration-200 hover:scale-105 border-none"
+          className="bg-gradient-to-r from-[#467BCA] to-[#77D1A8] hover:opacity-90 text-white px-2 py-1 h-6 text-xs font-medium rounded-md transition-all duration-200 hover:scale-105 border-none"
         >
           <Check className="w-3 h-3 mr-1" />
           Concluir

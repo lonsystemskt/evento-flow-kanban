@@ -81,7 +81,7 @@ const DemandModal = ({ isOpen, onClose, onSave, editingDemand }: DemandModalProp
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="Descreva o assunto da demanda"
-              className="w-full min-h-[80px] resize-none"
+              className="w-full min-h-[80px] resize-none text-sm"
             />
           </div>
 
@@ -92,7 +92,7 @@ const DemandModal = ({ isOpen, onClose, onSave, editingDemand }: DemandModalProp
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full justify-start text-left font-normal",
+                    "w-full justify-start text-left font-normal text-sm",
                     !date && "text-muted-foreground"
                   )}
                 >
@@ -114,13 +114,13 @@ const DemandModal = ({ isOpen, onClose, onSave, editingDemand }: DemandModalProp
         </div>
 
         <div className="flex justify-end gap-3">
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} className="text-sm">
             Cancelar
           </Button>
           <Button 
             onClick={handleSave}
             disabled={!title.trim() || !subject.trim() || !date}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            className="bg-blue-600 hover:bg-blue-700 text-white text-sm"
           >
             Salvar
           </Button>

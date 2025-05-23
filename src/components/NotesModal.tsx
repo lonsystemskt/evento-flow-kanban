@@ -67,7 +67,7 @@ const NotesModal = ({ isOpen, onClose, onSave, editingNote }: NotesModalProps) =
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="mt-1"
+              className="mt-1 text-sm"
               required
             />
           </div>
@@ -78,7 +78,7 @@ const NotesModal = ({ isOpen, onClose, onSave, editingNote }: NotesModalProps) =
               id="subject"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              className="mt-1"
+              className="mt-1 text-sm"
               rows={4}
               required
             />
@@ -91,7 +91,7 @@ const NotesModal = ({ isOpen, onClose, onSave, editingNote }: NotesModalProps) =
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full justify-start text-left font-normal mt-1",
+                    "w-full justify-start text-left font-normal mt-1 text-sm",
                     !date && "text-muted-foreground"
                   )}
                 >
@@ -138,12 +138,12 @@ const NotesModal = ({ isOpen, onClose, onSave, editingNote }: NotesModalProps) =
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose} className="text-sm">
               Cancelar
             </Button>
             <Button
               type="submit"
-              className="bg-gradient-to-r from-[#467BCA] to-[#77D1A8] hover:opacity-90 text-white"
+              className="bg-gradient-to-r from-[#467BCA] to-[#77D1A8] hover:opacity-90 text-white text-sm"
             >
               {editingNote ? 'Atualizar' : 'Salvar'}
             </Button>
