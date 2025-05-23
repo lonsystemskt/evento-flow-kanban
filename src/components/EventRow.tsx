@@ -6,6 +6,7 @@ import { Plus, ChevronLeft, ChevronRight, Edit, Archive, Trash2 } from 'lucide-r
 import { Event, Demand } from '@/types/event';
 import DemandCard from './DemandCard';
 import DemandModal from './DemandModal';
+import { Separator } from '@/components/ui/separator';
 
 interface EventRowProps {
   event: Event;
@@ -35,7 +36,7 @@ const EventRow = ({
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollContainerRef.current) {
-      const scrollAmount = 260; // Adjusted for smaller cards
+      const scrollAmount = 220; // Adjusted for smaller cards
       const currentScroll = scrollContainerRef.current.scrollLeft;
       const newScroll = direction === 'left' 
         ? currentScroll - scrollAmount 
@@ -72,52 +73,55 @@ const EventRow = ({
   console.log('Active demands:', activeDemands);
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 hover:border-blue-200 hover:shadow-md transition-all duration-200 p-4 relative overflow-hidden shadow-sm">
-      <div className="flex items-center gap-4 min-h-[220px]">
+    <div className="py-5 px-4 relative rounded-none border-0 bg-transparent hover:bg-gray-50/50 transition-all duration-200">
+      <div className="flex items-center gap-4 min-h-[180px]">
         {/* Fixed Event Info Section - Left Side */}
-        <div className="flex items-center gap-3 w-60 flex-shrink-0">
+        <div className="flex items-center gap-2 w-52 flex-shrink-0">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-50 to-green-50 rounded-full flex items-center justify-center cursor-pointer hover:bg-gradient-to-br hover:from-blue-100 hover:to-green-100 transition-all duration-200 relative group border-2 border-gray-100">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-50/50 to-green-50/50 rounded-full flex items-center justify-center cursor-pointer hover:bg-gradient-to-br hover:from-blue-100/50 hover:to-green-100/50 transition-all duration-200 relative group">
                 {event.logo ? (
-                  <img src={event.logo} alt={event.name} className="w-10 h-10 rounded-full object-cover" />
+                  <img src={event.logo} alt={event.name} className="w-8 h-8 rounded-full object-cover" />
                 ) : (
-                  <span className="text-[#122A3A] font-bold text-base">{event.name.charAt(0).toUpperCase()}</span>
+                  <span className="text-[#122A3A] font-bold text-xs">{event.name.charAt(0).toUpperCase()}</span>
                 )}
               </div>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-44 bg-white border border-gray-100 rounded-lg shadow-md">
-              <DropdownMenuItem onClick={() => onEditEvent(event)} className="cursor-pointer hover:bg-gray-50 text-sm">
-                <Edit className="w-3.5 h-3.5 mr-2" />
+            <DropdownMenuContent align="start" className="w-44 bg-white rounded-lg">
+              <DropdownMenuItem onClick={() => onEditEvent(event)} className="cursor-pointer hover:bg-gray-50 text-xs">
+                <Edit className="w-3 h-3 mr-2" />
                 Editar evento
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onArchiveEvent(event.id)} className="cursor-pointer hover:bg-gray-50 text-sm">
-                <Archive className="w-3.5 h-3.5 mr-2" />
+              <DropdownMenuItem onClick={() => onArchiveEvent(event.id)} className="cursor-pointer hover:bg-gray-50 text-xs">
+                <Archive className="w-3 h-3 mr-2" />
                 Arquivar evento
               </DropdownMenuItem>
               <DropdownMenuItem 
                 onClick={() => onDeleteEvent(event.id)} 
-                className="cursor-pointer text-red-500 focus:text-red-500 hover:bg-red-50 text-sm"
+                className="cursor-pointer text-red-500 focus:text-red-500 hover:bg-red-50 text-xs"
               >
-                <Trash2 className="w-3.5 h-3.5 mr-2" />
+                <Trash2 className="w-3 h-3 mr-2" />
                 Excluir evento
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <div className="flex-1 min-w-0 max-w-[160px]">
-            <h3 className="text-base font-bold text-[#122A3A] truncate leading-tight mb-1">{event.name}</h3>
-            <p className="text-xs text-[#122A3A]/60 font-medium">{event.date.toLocaleDateString('pt-BR')}</p>
+          <div className="flex-1 min-w-0 max-w-[140px]">
+            <h3 className="text-sm font-bold text-[#122A3A] truncate leading-tight mb-1">{event.name}</h3>
+            <p className="text-[10px] text-[#122A3A]/60 font-medium">{event.date.toLocaleDateString('pt-BR')}</p>
           </div>
 
           <Button
             onClick={handleAddDemand}
             size="sm"
-            className="w-8 h-8 rounded-full bg-gradient-to-r from-[#467BCA] to-[#77D1A8] hover:opacity-90 text-white p-0 transition-all duration-200 hover:scale-105 flex-shrink-0 shadow-sm"
+            className="w-7 h-7 rounded-full bg-gradient-to-r from-[#467BCA] to-[#77D1A8] hover:opacity-90 text-white p-0 transition-all duration-200 hover:scale-105 flex-shrink-0"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
           </Button>
         </div>
+
+        {/* Separator */}
+        <Separator orientation="vertical" className="h-12 bg-gray-100/70" />
 
         {/* Demands Section - Right Side */}
         <div className="flex-1 relative min-w-0">
@@ -128,7 +132,7 @@ const EventRow = ({
                 variant="ghost"
                 size="sm"
                 onClick={() => scroll('left')}
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white hover:bg-gray-50 border border-gray-200 shadow-md transition-all duration-200"
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-white hover:bg-gray-50 border-0 backdrop-blur-sm"
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
@@ -137,7 +141,7 @@ const EventRow = ({
                 variant="ghost"
                 size="sm"
                 onClick={() => scroll('right')}
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white hover:bg-gray-50 border border-gray-200 shadow-md transition-all duration-200"
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-white hover:bg-gray-50 border-0 backdrop-blur-sm"
               >
                 <ChevronRight className="w-4 h-4" />
               </Button>
@@ -145,8 +149,8 @@ const EventRow = ({
               {/* Cards Container */}
               <div 
                 ref={scrollContainerRef}
-                className="flex gap-3 overflow-x-auto scrollbar-hide py-2 px-10"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', minHeight: '210px' }}
+                className="flex gap-3 overflow-x-auto scrollbar-hide py-1 px-8"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', minHeight: '180px' }}
               >
                 {activeDemands.map(demand => (
                   <DemandCard
@@ -160,8 +164,8 @@ const EventRow = ({
               </div>
             </>
           ) : (
-            <div className="text-center py-8 text-[#122A3A]/50 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
-              <p className="text-base font-medium mb-1">Sem demandas</p>
+            <div className="text-center py-6 text-[#122A3A]/50 bg-gray-50/40 rounded-lg border border-dashed border-gray-200/50">
+              <p className="text-sm font-medium mb-1">Sem demandas</p>
               <p className="text-xs">Clique no botão + para criar uma nova demanda</p>
             </div>
           )}
