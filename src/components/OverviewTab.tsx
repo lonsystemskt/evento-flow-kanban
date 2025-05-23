@@ -38,30 +38,30 @@ const OverviewTab = ({ events, onEditDemand, onCompleteDemand }: OverviewTabProp
     <div className="space-y-1">
       {sortedDemands.length > 0 ? (
         sortedDemands.map((demand) => (
-          <div key={demand.id} className="bg-gray-50/40 dark:bg-gray-800/40 rounded-lg border border-gray-200/30 dark:border-gray-700/30 p-3 hover:bg-gray-50/60 dark:hover:bg-gray-800/60 transition-all duration-200">
+          <div key={demand.id} className="bg-gray-50/40 rounded-lg border border-gray-200/30 p-3 hover:bg-gray-50/60 transition-all duration-200">
             <div className="flex items-center gap-3">
               {/* Event Logo */}
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-50/50 to-green-50/50 dark:from-blue-900/20 dark:to-green-900/20 rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-50/50 to-green-50/50 rounded-full flex items-center justify-center flex-shrink-0">
                 {demand.eventLogo ? (
                   <img src={demand.eventLogo} alt={demand.eventName} className="w-10 h-10 rounded-full object-cover" />
                 ) : (
-                  <span className="text-[#122A3A] dark:text-white font-bold text-sm">{demand.eventName.charAt(0).toUpperCase()}</span>
+                  <span className="text-[#122A3A] font-bold text-sm">{demand.eventName.charAt(0).toUpperCase()}</span>
                 )}
               </div>
 
               {/* Event Name */}
               <div className="min-w-0 w-32 flex-shrink-0">
-                <p className="text-sm font-medium text-[#122A3A] dark:text-white truncate">{demand.eventName}</p>
+                <p className="text-sm font-medium text-[#122A3A] truncate">{demand.eventName}</p>
               </div>
 
               {/* Demand Info */}
               <div className="flex-1 min-w-0">
-                <h4 className="font-semibold text-[#122A3A] dark:text-white text-sm mb-1 truncate">{demand.title}</h4>
-                <p className="text-[#122A3A]/60 dark:text-gray-300/60 text-xs truncate">{demand.subject}</p>
+                <h4 className="font-semibold text-[#122A3A] text-sm mb-1 truncate">{demand.title}</h4>
+                <p className="text-[#122A3A]/60 text-xs truncate">{demand.subject}</p>
               </div>
 
               {/* Date */}
-              <div className="text-xs text-[#122A3A]/50 dark:text-gray-300/50 font-medium w-20 text-center flex-shrink-0">
+              <div className="text-xs text-[#122A3A]/50 font-medium w-20 text-center flex-shrink-0">
                 {demand.date.toLocaleDateString('pt-BR')}
               </div>
 
@@ -74,7 +74,7 @@ const OverviewTab = ({ events, onEditDemand, onCompleteDemand }: OverviewTabProp
                   variant="ghost"
                   size="sm"
                   onClick={() => onEditDemand(demand)}
-                  className="w-8 h-8 p-0 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 rounded-md transition-colors duration-200"
+                  className="w-8 h-8 p-0 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors duration-200"
                 >
                   <Edit className="w-4 h-4" />
                 </Button>
@@ -91,10 +91,10 @@ const OverviewTab = ({ events, onEditDemand, onCompleteDemand }: OverviewTabProp
           </div>
         ))
       ) : (
-        <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+        <div className="text-center py-20 bg-white rounded-xl border border-gray-200 shadow-sm">
           <div className="text-6xl mb-6">📊</div>
-          <p className="text-xl font-medium text-[#122A3A] dark:text-white mb-3">Nenhuma demanda ativa</p>
-          <p className="text-base text-[#122A3A]/70 dark:text-gray-300/70">Todas as demandas foram concluídas</p>
+          <p className="text-xl font-medium text-[#122A3A] mb-3">Nenhuma demanda ativa</p>
+          <p className="text-base text-[#122A3A]/70">Todas as demandas foram concluídas</p>
         </div>
       )}
     </div>

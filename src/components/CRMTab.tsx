@@ -51,33 +51,33 @@ const CRMTab = ({ crmRecords, onAddCRM, onUpdateCRM, onDeleteCRM }: CRMTabProps)
       <div className="space-y-1">
         {crmRecords.length > 0 ? (
           crmRecords.map((crm) => (
-            <div key={crm.id} className="bg-gray-50/40 dark:bg-gray-800/40 rounded-lg border border-gray-200/30 dark:border-gray-700/30 p-3 hover:bg-gray-50/60 dark:hover:bg-gray-800/60 transition-all duration-200">
+            <div key={crm.id} className="bg-gray-50/40 rounded-lg border border-gray-200/30 p-3 hover:bg-gray-50/60 transition-all duration-200">
               <div className="flex items-center gap-3">
                 {/* Status Indicator */}
                 <div className={`w-3 h-3 rounded-full ${crm.completed ? 'bg-green-500' : 'bg-gray-400'} flex-shrink-0`}></div>
 
                 {/* Name */}
                 <div className="min-w-0 w-40 flex-shrink-0">
-                  <p className="text-xs font-medium text-[#122A3A] dark:text-white truncate">{crm.name}</p>
+                  <p className="text-xs font-medium text-[#122A3A] truncate">{crm.name}</p>
                 </div>
 
                 {/* Contact */}
                 <div className="min-w-0 w-32 flex-shrink-0">
-                  <p className="text-xs text-[#122A3A]/60 dark:text-gray-300/60 truncate">{crm.contact}</p>
+                  <p className="text-xs text-[#122A3A]/60 truncate">{crm.contact}</p>
                 </div>
 
                 {/* Email */}
                 <div className="min-w-0 w-48 flex-shrink-0">
-                  <p className="text-xs text-[#122A3A]/60 dark:text-gray-300/60 truncate">{crm.email}</p>
+                  <p className="text-xs text-[#122A3A]/60 truncate">{crm.email}</p>
                 </div>
 
                 {/* Subject */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-[#122A3A] dark:text-white truncate">{crm.subject}</p>
+                  <p className="text-xs text-[#122A3A] truncate">{crm.subject}</p>
                 </div>
 
                 {/* Date */}
-                <div className="text-xs text-[#122A3A]/50 dark:text-gray-300/50 font-medium w-20 text-center flex-shrink-0">
+                <div className="text-xs text-[#122A3A]/50 font-medium w-20 text-center flex-shrink-0">
                   {crm.date.toLocaleDateString('pt-BR')}
                 </div>
 
@@ -87,7 +87,7 @@ const CRMTab = ({ crmRecords, onAddCRM, onUpdateCRM, onDeleteCRM }: CRMTabProps)
                     variant="ghost"
                     size="sm"
                     onClick={() => window.open(crm.file, '_blank')}
-                    className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex-shrink-0"
+                    className="text-xs text-blue-600 hover:text-blue-800 flex-shrink-0"
                   >
                     Ver arquivo
                   </Button>
@@ -99,7 +99,7 @@ const CRMTab = ({ crmRecords, onAddCRM, onUpdateCRM, onDeleteCRM }: CRMTabProps)
                     variant="ghost"
                     size="sm"
                     onClick={() => handleEditCRM(crm)}
-                    className="w-8 h-8 p-0 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 rounded-md transition-colors duration-200"
+                    className="w-8 h-8 p-0 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors duration-200"
                   >
                     <Edit className="w-4 h-4" />
                   </Button>
@@ -109,8 +109,8 @@ const CRMTab = ({ crmRecords, onAddCRM, onUpdateCRM, onDeleteCRM }: CRMTabProps)
                     onClick={() => onUpdateCRM(crm.id, { completed: !crm.completed })}
                     className={`w-8 h-8 p-0 rounded-md transition-colors duration-200 ${
                       crm.completed 
-                        ? 'hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-300' 
-                        : 'hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-600 dark:hover:text-green-400'
+                        ? 'hover:bg-gray-50 hover:text-gray-600' 
+                        : 'hover:bg-green-50 hover:text-green-600'
                     }`}
                   >
                     ✓
@@ -120,10 +120,10 @@ const CRMTab = ({ crmRecords, onAddCRM, onUpdateCRM, onDeleteCRM }: CRMTabProps)
             </div>
           ))
         ) : (
-          <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+          <div className="text-center py-20 bg-white rounded-xl border border-gray-200 shadow-sm">
             <div className="text-6xl mb-6">📞</div>
-            <p className="text-xl font-medium text-[#122A3A] dark:text-white mb-3">Nenhum registro CRM</p>
-            <p className="text-base text-[#122A3A]/70 dark:text-gray-300/70">Clique em "Novo Registro CRM" para começar</p>
+            <p className="text-xl font-medium text-[#122A3A] mb-3">Nenhum registro CRM</p>
+            <p className="text-base text-[#122A3A]/70">Clique em "Novo Registro CRM" para começar</p>
           </div>
         )}
       </div>
