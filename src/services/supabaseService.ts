@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Event, Demand, CRM, Note } from '@/types/event';
 
@@ -215,8 +216,14 @@ export const fetchCRMRecords = async (): Promise<CRM[]> => {
   }
 
   return data.map((crm: any) => ({
-    ...crm,
+    id: crm.id,
+    name: crm.name,
+    contact: crm.contact,
+    email: crm.email,
+    subject: crm.subject,
+    file: crm.file,
     date: new Date(crm.date),
+    completed: crm.completed,
     status: crm.status || 'Ativo', // Default to 'Ativo' if not set
   }));
 };
@@ -243,8 +250,15 @@ export const createCRMRecord = async (crm: Omit<CRM, 'id'>): Promise<CRM> => {
   }
 
   return {
-    ...data,
+    id: data.id,
+    name: data.name,
+    contact: data.contact,
+    email: data.email,
+    subject: data.subject,
+    file: data.file,
     date: new Date(data.date),
+    completed: data.completed,
+    status: data.status,
   };
 };
 
