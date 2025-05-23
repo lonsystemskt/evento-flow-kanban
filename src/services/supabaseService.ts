@@ -94,7 +94,7 @@ export const fetchDemands = async (): Promise<Demand[]> => {
     subject: demand.subject,
     date: new Date(demand.date),
     completed: demand.completed,
-    urgency: demand.urgency,
+    urgency: demand.urgency as Demand['urgency'], // Type assertion for urgency
   }));
 };
 
@@ -142,7 +142,7 @@ export const createDemand = async (demand: Omit<Demand, 'id' | 'completed' | 'ur
     subject: data.subject,
     date: new Date(data.date),
     completed: data.completed,
-    urgency: data.urgency,
+    urgency: data.urgency as Demand['urgency'], // Type assertion for urgency
   };
 };
 
