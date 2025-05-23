@@ -68,21 +68,21 @@ const EventRow = ({
   const activeDemands = event.demands.filter(demand => !demand.completed);
 
   return (
-    <div className="bg-white rounded-lg border border-gray-100 hover:border-gray-200 transition-all duration-200 p-3 relative overflow-hidden">
-      <div className="flex items-center gap-3 h-12">
+    <div className="bg-white rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-200 p-4 relative overflow-hidden">
+      <div className="flex items-center gap-4 h-14">
         {/* Fixed Event Info Section - Left Side */}
-        <div className="flex items-center gap-1.5 w-52 flex-shrink-0">
+        <div className="flex items-center gap-2 w-60 flex-shrink-0">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors duration-200 relative group">
+              <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors duration-200 relative group">
                 {event.logo ? (
-                  <img src={event.logo} alt={event.name} className="w-8 h-8 rounded-full object-cover" />
+                  <img src={event.logo} alt={event.name} className="w-10 h-10 rounded-full object-cover" />
                 ) : (
-                  <span className="text-[#122A3A] font-medium text-xs">{event.name.charAt(0).toUpperCase()}</span>
+                  <span className="text-[#122A3A] font-medium text-sm">{event.name.charAt(0).toUpperCase()}</span>
                 )}
               </div>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-48 bg-white border border-gray-100">
+            <DropdownMenuContent align="start" className="w-48 bg-white border border-gray-100 rounded-xl shadow-md">
               <DropdownMenuItem onClick={() => onEditEvent(event)} className="cursor-pointer hover:bg-gray-50">
                 <Edit className="w-4 h-4 mr-2" />
                 Editar evento
@@ -101,17 +101,17 @@ const EventRow = ({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <div className="flex-1 min-w-0 max-w-[120px]">
-            <h3 className="text-sm font-medium text-[#122A3A] truncate leading-tight">{event.name}</h3>
+          <div className="flex-1 min-w-0 max-w-[140px]">
+            <h3 className="text-base font-medium text-[#122A3A] truncate leading-tight">{event.name}</h3>
             <p className="text-xs text-[#122A3A]/60 mt-0.5">{event.date.toLocaleDateString('pt-BR')}</p>
           </div>
 
           <Button
             onClick={handleAddDemand}
             size="sm"
-            className="w-6 h-6 rounded-full bg-gradient-to-r from-[#467BCA] to-[#77D1A8] hover:opacity-90 text-white p-0 transition-all duration-200 hover:scale-105 flex-shrink-0"
+            className="w-8 h-8 rounded-full bg-gradient-to-r from-[#467BCA] to-[#77D1A8] hover:opacity-90 text-white p-0 transition-all duration-200 hover:scale-105 flex-shrink-0"
           >
-            <Plus className="w-3 h-3" />
+            <Plus className="w-4 h-4" />
           </Button>
         </div>
 
@@ -124,25 +124,25 @@ const EventRow = ({
                 variant="ghost"
                 size="sm"
                 onClick={() => scroll('left')}
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-6 h-6 rounded-full bg-white hover:bg-gray-50 border border-gray-200 transition-all duration-200"
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white hover:bg-gray-50 border border-gray-200 shadow-sm transition-all duration-200"
               >
-                <ChevronLeft className="w-3 h-3" />
+                <ChevronLeft className="w-4 h-4" />
               </Button>
               
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => scroll('right')}
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-6 h-6 rounded-full bg-white hover:bg-gray-50 border border-gray-200 transition-all duration-200"
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white hover:bg-gray-50 border border-gray-200 shadow-sm transition-all duration-200"
               >
-                <ChevronRight className="w-3 h-3" />
+                <ChevronRight className="w-4 h-4" />
               </Button>
 
               {/* Cards Container */}
               <div 
                 ref={scrollContainerRef}
-                className="flex gap-2 overflow-x-auto scrollbar-hide py-1 px-7"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', minHeight: '210px' }}
+                className="flex gap-3 overflow-x-auto scrollbar-hide py-2 px-8"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', minHeight: '240px' }}
               >
                 {activeDemands.map(demand => (
                   <DemandCard
@@ -156,8 +156,8 @@ const EventRow = ({
               </div>
             </>
           ) : (
-            <div className="text-center py-3 text-[#122A3A]/50">
-              <p className="text-xs">Sem demandas</p>
+            <div className="text-center py-6 text-[#122A3A]/50">
+              <p className="text-sm">Sem demandas</p>
             </div>
           )}
         </div>

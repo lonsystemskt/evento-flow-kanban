@@ -39,47 +39,52 @@ const DemandCard = ({ demand, onEdit, onDelete, onComplete }: DemandCardProps) =
   };
 
   return (
-    <div className="min-w-[260px] max-w-[260px] min-h-[190px] bg-white border border-gray-100 rounded-lg transition-all duration-200 p-3 relative group hover:border-gray-200">
+    <div className="min-w-[280px] max-w-[280px] min-h-[220px] bg-white border border-gray-100 rounded-xl shadow-sm transition-all duration-200 p-4 relative group hover:border-gray-200 hover:shadow-md">
       {/* Urgency Indicator */}
-      <div 
-        className={`absolute top-2 right-2 w-2.5 h-2.5 rounded-full ${getUrgencyColor(demand.urgency)}`}
-        title={getUrgencyText(demand.urgency)}
-      ></div>
+      <div className="flex items-center justify-between mb-2">
+        <span className={`px-2 py-0.5 text-xs rounded-full text-white ${getUrgencyColor(demand.urgency).replace('bg-', 'bg-').replace('500', '600')}`}>
+          {getUrgencyText(demand.urgency)}
+        </span>
+        <div 
+          className={`w-3 h-3 rounded-full ${getUrgencyColor(demand.urgency)}`}
+          title={getUrgencyText(demand.urgency)}
+        ></div>
+      </div>
 
       {/* Content */}
-      <div className="pr-3 mb-20">
-        <h4 className="font-bold text-[#122A3A] text-sm mb-1.5 line-clamp-2 leading-tight">{demand.title}</h4>
-        <p className="text-[#122A3A]/70 text-xs mb-2 line-clamp-2 leading-relaxed">{demand.subject}</p>
+      <div className="pr-2 mb-24">
+        <h4 className="font-bold text-[#122A3A] text-base mb-2 line-clamp-2 leading-tight">{demand.title}</h4>
+        <p className="text-[#122A3A]/70 text-sm mb-3 line-clamp-3 leading-relaxed">{demand.subject}</p>
         <p className="text-[#122A3A]/60 text-xs">{demand.date.toLocaleDateString('pt-BR')}</p>
       </div>
 
       {/* Actions */}
-      <div className="flex items-center justify-between pt-2 border-t border-gray-100 absolute bottom-3 left-3 right-3">
-        <div className="flex items-center gap-1">
+      <div className="flex items-center justify-between pt-2 border-t border-gray-100 absolute bottom-4 left-4 right-4">
+        <div className="flex items-center gap-1.5">
           <Button
             variant="ghost"
             size="sm"
             onClick={onEdit}
-            className="w-6 h-6 p-0 hover:bg-gray-100 hover:text-gray-700 rounded transition-colors duration-200"
+            className="w-7 h-7 p-0 hover:bg-gray-100 hover:text-gray-700 rounded-full transition-colors duration-200"
           >
-            <Edit className="w-3 h-3" />
+            <Edit className="w-3.5 h-3.5" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={onDelete}
-            className="w-6 h-6 p-0 hover:bg-red-50 hover:text-red-600 rounded transition-colors duration-200"
+            className="w-7 h-7 p-0 hover:bg-red-50 hover:text-red-600 rounded-full transition-colors duration-200"
           >
-            <Trash2 className="w-3 h-3" />
+            <Trash2 className="w-3.5 h-3.5" />
           </Button>
         </div>
         
         <Button
           size="sm"
           onClick={onComplete}
-          className="bg-gradient-to-r from-[#467BCA] to-[#77D1A8] hover:opacity-90 text-white px-2.5 py-1 h-6 text-xs rounded transition-all duration-200 hover:scale-105 border-none"
+          className="bg-gradient-to-r from-[#467BCA] to-[#77D1A8] hover:opacity-90 text-white px-3 py-1 h-7 text-xs rounded-full transition-all duration-200 hover:scale-105 border-none"
         >
-          <Check className="w-3 h-3 mr-1" />
+          <Check className="w-3.5 h-3.5 mr-1" />
           Concluir
         </Button>
       </div>
