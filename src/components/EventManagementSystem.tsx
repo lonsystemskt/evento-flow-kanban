@@ -10,6 +10,7 @@ import CRMTab from './CRMTab';
 import NotesTab from './NotesTab';
 import DemandModal from './DemandModal';
 import { v4 as uuidv4 } from 'uuid';
+import ThemeToggle from './ThemeToggle';
 
 const EventManagementSystem = () => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -230,12 +231,13 @@ const EventManagementSystem = () => {
   console.log('Completed demands:', completedDemands);
 
   return (
-    <div className="min-h-screen p-5 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20" style={{ margin: '20px' }}>
+    <div className="min-h-screen p-5 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 dark:from-gray-900 dark:via-gray-800/30 dark:to-gray-900/20 transition-colors duration-300" style={{ margin: '20px' }}>
+      <ThemeToggle />
       <div className="max-w-full mx-auto">
         <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-[#467BCA] to-[#77D1A8] inline-block text-transparent bg-clip-text mb-3">Lon Demandas</h1>
-            <p className="text-[#122A3A]/70 text-base">{getCurrentDateTime()}</p>
+            <p className="text-[#122A3A]/70 dark:text-gray-300/70 text-base">{getCurrentDateTime()}</p>
           </div>
           
           <Button 
@@ -252,23 +254,23 @@ const EventManagementSystem = () => {
 
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabType)} className="space-y-6">
           <div className="flex justify-end mb-4">
-            <TabsList className="bg-white border border-gray-200 rounded-xl shadow-md p-1">
-              <TabsTrigger value="demands" className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA]/10 data-[state=active]:to-[#77D1A8]/10 data-[state=active]:text-[#122A3A] rounded-lg px-5 py-3">
+            <TabsList className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-md p-1">
+              <TabsTrigger value="demands" className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA]/10 data-[state=active]:to-[#77D1A8]/10 data-[state=active]:text-[#122A3A] dark:data-[state=active]:text-white rounded-lg px-5 py-3">
                 Demandas ({activeEvents.length})
               </TabsTrigger>
-              <TabsTrigger value="overview" className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA]/10 data-[state=active]:to-[#77D1A8]/10 data-[state=active]:text-[#122A3A] rounded-lg px-5 py-3">
+              <TabsTrigger value="overview" className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA]/10 data-[state=active]:to-[#77D1A8]/10 data-[state=active]:text-[#122A3A] dark:data-[state=active]:text-white rounded-lg px-5 py-3">
                 Visão Geral
               </TabsTrigger>
-              <TabsTrigger value="crm" className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA]/10 data-[state=active]:to-[#77D1A8]/10 data-[state=active]:text-[#122A3A] rounded-lg px-5 py-3">
+              <TabsTrigger value="crm" className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA]/10 data-[state=active]:to-[#77D1A8]/10 data-[state=active]:text-[#122A3A] dark:data-[state=active]:text-white rounded-lg px-5 py-3">
                 CRM ({crmRecords.length})
               </TabsTrigger>
-              <TabsTrigger value="notes" className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA]/10 data-[state=active]:to-[#77D1A8]/10 data-[state=active]:text-[#122A3A] rounded-lg px-5 py-3">
+              <TabsTrigger value="notes" className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA]/10 data-[state=active]:to-[#77D1A8]/10 data-[state=active]:text-[#122A3A] dark:data-[state=active]:text-white rounded-lg px-5 py-3">
                 Anotações ({notes.length})
               </TabsTrigger>
-              <TabsTrigger value="archived" className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA]/10 data-[state=active]:to-[#77D1A8]/10 data-[state=active]:text-[#122A3A] rounded-lg px-5 py-3">
+              <TabsTrigger value="archived" className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA]/10 data-[state=active]:to-[#77D1A8]/10 data-[state=active]:text-[#122A3A] dark:data-[state=active]:text-white rounded-lg px-5 py-3">
                 Arquivadas ({archivedEvents.length})
               </TabsTrigger>
-              <TabsTrigger value="completed" className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA]/10 data-[state=active]:to-[#77D1A8]/10 data-[state=active]:text-[#122A3A] rounded-lg px-5 py-3">
+              <TabsTrigger value="completed" className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA]/10 data-[state=active]:to-[#77D1A8]/10 data-[state=active]:text-[#122A3A] dark:data-[state=active]:text-white rounded-lg px-5 py-3">
                 Concluídas ({completedDemands.length})
               </TabsTrigger>
             </TabsList>
@@ -293,10 +295,10 @@ const EventManagementSystem = () => {
               ))}
               
               {activeEvents.length === 0 && (
-                <div className="text-center py-20 bg-white rounded-xl border border-gray-200 shadow-md">
+                <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-md">
                   <div className="text-6xl mb-6">📅</div>
-                  <p className="text-xl font-medium text-[#122A3A] mb-3">Nenhum evento criado ainda</p>
-                  <p className="text-base text-[#122A3A]/70">Clique em "Novo Evento" para começar</p>
+                  <p className="text-xl font-medium text-[#122A3A] dark:text-white mb-3">Nenhum evento criado ainda</p>
+                  <p className="text-base text-[#122A3A]/70 dark:text-gray-300/70">Clique em "Novo Evento" para começar</p>
                 </div>
               )}
             </div>
@@ -331,18 +333,18 @@ const EventManagementSystem = () => {
           <TabsContent value="archived">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {archivedEvents.map(event => (
-                <div key={event.id} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between transition-all duration-200 hover:shadow-md">
+                <div key={event.id} className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-center justify-between transition-all duration-200 hover:shadow-md">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                    <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
                       {event.logo ? (
                         <img src={event.logo} alt={event.name} className="w-10 h-10 rounded-full object-cover" />
                       ) : (
-                        <span className="text-[#122A3A] font-medium text-sm">{event.name.charAt(0)}</span>
+                        <span className="text-[#122A3A] dark:text-white font-medium text-sm">{event.name.charAt(0)}</span>
                       )}
                     </div>
                     <div>
-                      <h3 className="font-medium text-[#122A3A] text-base">{event.name}</h3>
-                      <p className="text-xs text-[#122A3A]/60">{event.date.toLocaleDateString('pt-BR')}</p>
+                      <h3 className="font-medium text-[#122A3A] dark:text-white text-base">{event.name}</h3>
+                      <p className="text-xs text-[#122A3A]/60 dark:text-gray-300/60">{event.date.toLocaleDateString('pt-BR')}</p>
                     </div>
                   </div>
                   <Button 
@@ -355,9 +357,9 @@ const EventManagementSystem = () => {
               ))}
               
               {archivedEvents.length === 0 && (
-                <div className="col-span-full text-center py-16 bg-white rounded-xl border border-gray-100 shadow-sm">
+                <div className="col-span-full text-center py-16 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
                   <div className="text-5xl mb-4">📦</div>
-                  <p className="text-base font-medium text-[#122A3A]">Nenhum evento arquivado</p>
+                  <p className="text-base font-medium text-[#122A3A] dark:text-white">Nenhum evento arquivado</p>
                 </div>
               )}
             </div>
@@ -368,14 +370,14 @@ const EventManagementSystem = () => {
               {completedDemands.map(demand => {
                 const event = events.find(e => e.id === demand.eventId);
                 return (
-                  <div key={demand.id} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm transition-all duration-200 hover:shadow-md">
+                  <div key={demand.id} className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all duration-200 hover:shadow-md">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-bold text-[#122A3A] text-sm">{demand.title}</h3>
+                      <h3 className="font-bold text-[#122A3A] dark:text-white text-sm">{demand.title}</h3>
                       <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                     </div>
-                    <p className="text-sm text-[#122A3A]/70 mb-3 line-clamp-2">{demand.subject}</p>
-                    <p className="text-xs text-[#122A3A]/60 mb-1">{event?.name}</p>
-                    <p className="text-xs text-[#122A3A]/60 mb-4">{demand.date.toLocaleDateString('pt-BR')}</p>
+                    <p className="text-sm text-[#122A3A]/70 dark:text-gray-300/70 mb-3 line-clamp-2">{demand.subject}</p>
+                    <p className="text-xs text-[#122A3A]/60 dark:text-gray-300/60 mb-1">{event?.name}</p>
+                    <p className="text-xs text-[#122A3A]/60 dark:text-gray-300/60 mb-4">{demand.date.toLocaleDateString('pt-BR')}</p>
                     <Button 
                       onClick={() => handleUpdateDemand(demand.eventId, demand.id, { completed: false })}
                       className="w-full text-xs h-8 bg-gradient-to-r from-[#467BCA] to-[#77D1A8] hover:opacity-90 text-white rounded-xl transition-all duration-200"
@@ -387,9 +389,9 @@ const EventManagementSystem = () => {
               })}
               
               {completedDemands.length === 0 && (
-                <div className="col-span-full text-center py-16 bg-white rounded-xl border border-gray-100 shadow-sm">
+                <div className="col-span-full text-center py-16 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
                   <div className="text-5xl mb-4">✅</div>
-                  <p className="text-base font-medium text-[#122A3A]">Nenhuma demanda concluída</p>
+                  <p className="text-base font-medium text-[#122A3A] dark:text-white">Nenhuma demanda concluída</p>
                 </div>
               )}
             </div>

@@ -51,23 +51,23 @@ const NotesTab = ({ notes, onAddNote, onUpdateNote, onDeleteNote }: NotesTabProp
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
         {notes.length > 0 ? (
           notes.map((note) => (
-            <div key={note.id} className="bg-gray-50/40 rounded-lg border border-gray-200/30 p-4 hover:bg-gray-50/60 transition-all duration-200">
+            <div key={note.id} className="bg-gray-50/40 dark:bg-gray-800/40 rounded-lg border border-gray-200/30 dark:border-gray-700/30 p-4 hover:bg-gray-50/60 dark:hover:bg-gray-800/60 transition-all duration-200">
               <div className="flex items-start justify-between mb-3">
-                <h4 className="font-semibold text-[#122A3A] text-sm line-clamp-2 flex-1">{note.title}</h4>
+                <h4 className="font-semibold text-[#122A3A] dark:text-white text-sm line-clamp-2 flex-1">{note.title}</h4>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => handleEditNote(note)}
-                  className="w-6 h-6 p-0 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors duration-200 flex-shrink-0 ml-2"
+                  className="w-6 h-6 p-0 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 rounded-md transition-colors duration-200 flex-shrink-0 ml-2"
                 >
                   <Edit className="w-3 h-3" />
                 </Button>
               </div>
               
-              <p className="text-[#122A3A]/60 text-xs mb-3 line-clamp-3 leading-relaxed">{note.subject}</p>
+              <p className="text-[#122A3A]/60 dark:text-gray-300/60 text-xs mb-3 line-clamp-3 leading-relaxed">{note.subject}</p>
               
               <div className="flex items-center justify-between text-xs">
-                <span className="text-[#122A3A]/50 font-medium">
+                <span className="text-[#122A3A]/50 dark:text-gray-300/50 font-medium">
                   {note.date.toLocaleDateString('pt-BR')}
                 </span>
                 <span className="bg-gradient-to-r from-[#467BCA] to-[#77D1A8] text-white px-2 py-1 rounded-full text-xs font-medium">
@@ -77,10 +77,10 @@ const NotesTab = ({ notes, onAddNote, onUpdateNote, onDeleteNote }: NotesTabProp
             </div>
           ))
         ) : (
-          <div className="col-span-full text-center py-20 bg-white rounded-xl border border-gray-200 shadow-sm">
+          <div className="col-span-full text-center py-20 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
             <div className="text-6xl mb-6">📝</div>
-            <p className="text-xl font-medium text-[#122A3A] mb-3">Nenhuma anotação</p>
-            <p className="text-base text-[#122A3A]/70">Clique em "Nova Anotação" para começar</p>
+            <p className="text-xl font-medium text-[#122A3A] dark:text-white mb-3">Nenhuma anotação</p>
+            <p className="text-base text-[#122A3A]/70 dark:text-gray-300/70">Clique em "Nova Anotação" para começar</p>
           </div>
         )}
       </div>
