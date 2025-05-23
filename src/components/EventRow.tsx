@@ -71,14 +71,14 @@ const EventRow = ({
     <div className="bg-white rounded-lg border border-gray-100 hover:border-gray-200 transition-all duration-200 p-3 relative overflow-hidden">
       <div className="flex items-center gap-3 h-12">
         {/* Fixed Event Info Section - Left Side */}
-        <div className="flex items-center gap-2.5 w-72 flex-shrink-0">
+        <div className="flex items-center gap-1.5 w-52 flex-shrink-0">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors duration-200 relative group">
                 {event.logo ? (
                   <img src={event.logo} alt={event.name} className="w-8 h-8 rounded-full object-cover" />
                 ) : (
-                  <span className="text-gray-600 font-medium text-xs">{event.name.charAt(0).toUpperCase()}</span>
+                  <span className="text-[#122A3A] font-medium text-xs">{event.name.charAt(0).toUpperCase()}</span>
                 )}
               </div>
             </DropdownMenuTrigger>
@@ -101,15 +101,15 @@ const EventRow = ({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-medium text-gray-900 truncate leading-tight">{event.name}</h3>
-            <p className="text-xs text-gray-500 mt-0.5">{event.date.toLocaleDateString('pt-BR')}</p>
+          <div className="flex-1 min-w-0 max-w-[120px]">
+            <h3 className="text-sm font-medium text-[#122A3A] truncate leading-tight">{event.name}</h3>
+            <p className="text-xs text-[#122A3A]/60 mt-0.5">{event.date.toLocaleDateString('pt-BR')}</p>
           </div>
 
           <Button
             onClick={handleAddDemand}
             size="sm"
-            className="w-6 h-6 rounded-full bg-blue-500 hover:bg-blue-600 text-white p-0 transition-all duration-200 hover:scale-105 flex-shrink-0"
+            className="w-6 h-6 rounded-full bg-gradient-to-r from-[#467BCA] to-[#77D1A8] hover:opacity-90 text-white p-0 transition-all duration-200 hover:scale-105 flex-shrink-0"
           >
             <Plus className="w-3 h-3" />
           </Button>
@@ -141,7 +141,7 @@ const EventRow = ({
               {/* Cards Container */}
               <div 
                 ref={scrollContainerRef}
-                className="flex gap-2.5 overflow-x-auto scrollbar-hide py-1 px-7"
+                className="flex gap-2 overflow-x-auto scrollbar-hide py-1 px-7"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 {activeDemands.map(demand => (
@@ -156,7 +156,7 @@ const EventRow = ({
               </div>
             </>
           ) : (
-            <div className="text-center py-3 text-gray-400">
+            <div className="text-center py-3 text-[#122A3A]/50">
               <p className="text-xs">Sem demandas</p>
             </div>
           )}
