@@ -16,7 +16,8 @@ function Calendar({
 }: CalendarProps) {
   const handleDayClick = (day: Date, modifiers: any) => {
     if (!modifiers.disabled) {
-      if (props.onSelect) {
+      // Type-safe check for onSelect based on mode
+      if ('onSelect' in props && typeof props.onSelect === 'function') {
         props.onSelect(day);
       }
       
