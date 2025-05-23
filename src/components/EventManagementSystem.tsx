@@ -2,18 +2,34 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus } from 'lucide-react';
-import { Event, Demand, TabType } from '@/types/event';
+import { Event, Demand, CRM, Note, TabType } from '@/types/event';
 import EventModal from './EventModal';
 import EventRow from './EventRow';
+import OverviewTab from './OverviewTab';
+import CRMTab from './CRMTab';
+import NotesTab from './NotesTab';
+import DemandModal from './DemandModal';
 import { v4 as uuidv4 } from 'uuid';
 
 const EventManagementSystem = () => {
   const [events, setEvents] = useState<Event[]>([]);
+  const [crmRecords, setCrmRecords] = useState<CRM[]>([]);
+  const [notes, setNotes] = useState<Note[]>([]);
   const [activeTab, setActiveTab] = useState<TabType>('demands');
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+  const [isDemandModalOpen, setIsDemandModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [editingDemand, setEditingDemand] = useState<Demand | null>(null);
 
   console.log('EventManagementSystem rendering with events:', events);
+
+  const getCurrentDateTime = () => {
+    const now = new Date();
+    const day = now.toLocaleDateString('pt-BR', { weekday: 'long' });
+    const date = now.toLocaleDateString('pt-BR');
+    const time = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    return `Bem-vindo! Hoje é ${day}, ${date} - ${time}`;
+  };
 
   const handleCreateEvent = (eventData: Omit<Event, 'id' | 'archived' | 'demands'>) => {
     const newEvent: Event = {
@@ -104,11 +120,36 @@ const EventManagementSystem = () => {
       event.id === eventId 
         ? {
             ...event,
-            demands: event.demands.map(demand => 
-              demand.id === demandId 
-                ? { ...demand, ...demandData }
-                : demand
-            )
+            demands: event.demands.map(demand => {
+              if (demand.id === demandId) {
+                const updatedDemand = { ...demand, ...demandData };
+                
+                // Recalculate urgency if date is updated
+                if (demandData.date) {
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  
+                  const tomorrow = new Date(today);
+                  tomorrow.setDate(tomorrow.getDate() + 1);
+                  
+                  const demandDate = new Date(demandData.date);
+                  demandDate.setHours(0, 0, 0, 0);
+                  
+                  if (demandDate < today) {
+                    updatedDemand.urgency = 'overdue';
+                  } else if (demandDate.getTime() === today.getTime()) {
+                    updatedDemand.urgency = 'today';
+                  } else if (demandDate.getTime() === tomorrow.getTime()) {
+                    updatedDemand.urgency = 'tomorrow';
+                  } else {
+                    updatedDemand.urgency = 'future';
+                  }
+                }
+                
+                return updatedDemand;
+              }
+              return demand;
+            })
           }
         : event
     ));
@@ -127,6 +168,57 @@ const EventManagementSystem = () => {
     ));
   };
 
+  const handleEditDemandFromOverview = (demand: Demand) => {
+    setEditingDemand(demand);
+    setIsDemandModalOpen(true);
+  };
+
+  const handleSaveDemandFromOverview = (demandData: Omit<Demand, 'id' | 'eventId' | 'completed' | 'urgency'>) => {
+    if (editingDemand) {
+      handleUpdateDemand(editingDemand.eventId, editingDemand.id, demandData);
+    }
+    setIsDemandModalOpen(false);
+    setEditingDemand(null);
+  };
+
+  // CRM handlers
+  const handleAddCRM = (crmData: Omit<CRM, 'id'>) => {
+    const newCRM: CRM = {
+      ...crmData,
+      id: uuidv4()
+    };
+    setCrmRecords(prev => [...prev, newCRM]);
+  };
+
+  const handleUpdateCRM = (id: string, crmData: Partial<CRM>) => {
+    setCrmRecords(prev => prev.map(crm => 
+      crm.id === id ? { ...crm, ...crmData } : crm
+    ));
+  };
+
+  const handleDeleteCRM = (id: string) => {
+    setCrmRecords(prev => prev.filter(crm => crm.id !== id));
+  };
+
+  // Notes handlers
+  const handleAddNote = (noteData: Omit<Note, 'id'>) => {
+    const newNote: Note = {
+      ...noteData,
+      id: uuidv4()
+    };
+    setNotes(prev => [...prev, newNote]);
+  };
+
+  const handleUpdateNote = (id: string, noteData: Partial<Note>) => {
+    setNotes(prev => prev.map(note => 
+      note.id === id ? { ...note, ...noteData } : note
+    ));
+  };
+
+  const handleDeleteNote = (id: string) => {
+    setNotes(prev => prev.filter(note => note.id !== id));
+  };
+
   const activeEvents = events.filter(event => !event.archived);
   const archivedEvents = events.filter(event => event.archived);
   const completedDemands = events.flatMap(event => 
@@ -143,7 +235,7 @@ const EventManagementSystem = () => {
         <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-[#467BCA] to-[#77D1A8] inline-block text-transparent bg-clip-text mb-3">Lon Demandas</h1>
-            <p className="text-[#122A3A]/70 text-lg">Organize seus eventos e demandas de forma visual e intuitiva</p>
+            <p className="text-[#122A3A]/70 text-lg">{getCurrentDateTime()}</p>
           </div>
           
           <Button 
@@ -162,7 +254,16 @@ const EventManagementSystem = () => {
           <div className="flex justify-end mb-4">
             <TabsList className="bg-white border border-gray-200 rounded-xl shadow-md p-1">
               <TabsTrigger value="demands" className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA]/10 data-[state=active]:to-[#77D1A8]/10 data-[state=active]:text-[#122A3A] rounded-lg px-5 py-3">
-                Início ({activeEvents.length})
+                Demandas ({activeEvents.length})
+              </TabsTrigger>
+              <TabsTrigger value="overview" className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA]/10 data-[state=active]:to-[#77D1A8]/10 data-[state=active]:text-[#122A3A] rounded-lg px-5 py-3">
+                Visão Geral
+              </TabsTrigger>
+              <TabsTrigger value="crm" className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA]/10 data-[state=active]:to-[#77D1A8]/10 data-[state=active]:text-[#122A3A] rounded-lg px-5 py-3">
+                CRM ({crmRecords.length})
+              </TabsTrigger>
+              <TabsTrigger value="notes" className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA]/10 data-[state=active]:to-[#77D1A8]/10 data-[state=active]:text-[#122A3A] rounded-lg px-5 py-3">
+                Anotações ({notes.length})
               </TabsTrigger>
               <TabsTrigger value="archived" className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA]/10 data-[state=active]:to-[#77D1A8]/10 data-[state=active]:text-[#122A3A] rounded-lg px-5 py-3">
                 Arquivadas ({archivedEvents.length})
@@ -199,6 +300,32 @@ const EventManagementSystem = () => {
                 </div>
               )}
             </div>
+          </TabsContent>
+
+          <TabsContent value="overview">
+            <OverviewTab
+              events={activeEvents}
+              onEditDemand={handleEditDemandFromOverview}
+              onCompleteDemand={handleUpdateDemand}
+            />
+          </TabsContent>
+
+          <TabsContent value="crm">
+            <CRMTab
+              crmRecords={crmRecords}
+              onAddCRM={handleAddCRM}
+              onUpdateCRM={handleUpdateCRM}
+              onDeleteCRM={handleDeleteCRM}
+            />
+          </TabsContent>
+
+          <TabsContent value="notes">
+            <NotesTab
+              notes={notes}
+              onAddNote={handleAddNote}
+              onUpdateNote={handleUpdateNote}
+              onDeleteNote={handleDeleteNote}
+            />
           </TabsContent>
 
           <TabsContent value="archived">
@@ -277,6 +404,16 @@ const EventManagementSystem = () => {
           }}
           onSave={editingEvent ? handleEditEvent : handleCreateEvent}
           editingEvent={editingEvent}
+        />
+
+        <DemandModal
+          isOpen={isDemandModalOpen}
+          onClose={() => {
+            setIsDemandModalOpen(false);
+            setEditingDemand(null);
+          }}
+          onSave={handleSaveDemandFromOverview}
+          editingDemand={editingDemand}
         />
       </div>
     </div>

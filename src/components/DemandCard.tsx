@@ -41,7 +41,7 @@ const DemandCard = ({ demand, onEdit, onDelete, onComplete }: DemandCardProps) =
   };
 
   return (
-    <div className="min-w-[176px] max-w-[176px] min-h-[88px] bg-gray-50/30 rounded-lg border border-gray-200/40 flex flex-col p-3">
+    <div className="min-w-[176px] max-w-[176px] min-h-[88px] bg-gray-50/40 rounded-lg border border-gray-200/30 flex flex-col p-3">
       {/* Urgency Indicator */}
       <div className="flex items-center justify-between mb-2">
         <span className={`px-1.5 py-0.5 text-[10px] font-medium rounded-md text-white ${getUrgencyColor(demand.urgency)}`}>
@@ -61,7 +61,7 @@ const DemandCard = ({ demand, onEdit, onDelete, onComplete }: DemandCardProps) =
         <p className="text-[#122A3A]/60 text-[10px] mb-1 line-clamp-2 leading-relaxed flex-1">
           {demand.subject || 'Assunto não informado'}
         </p>
-        <p className="text-[#122A3A]/50 text-[9px] font-medium">
+        <p className="text-[#122A3A]/50 text-[10px] font-medium">
           {demand.date ? demand.date.toLocaleDateString('pt-BR') : 'Data não informada'}
         </p>
       </div>

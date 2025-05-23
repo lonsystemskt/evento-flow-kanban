@@ -12,8 +12,26 @@ function Calendar({
   className,
   classNames,
   showOutsideDays = true,
+  onSelect,
   ...props
 }: CalendarProps) {
+  const handleDayClick = (day: Date, modifiers: any) => {
+    if (!modifiers.disabled) {
+      if (onSelect) {
+        onSelect(day);
+      }
+      
+      // Close popover after selection
+      setTimeout(() => {
+        const popoverTrigger = document.querySelector('[data-state="open"]');
+        if (popoverTrigger) {
+          const closeEvent = new KeyboardEvent('keydown', { key: 'Escape' });
+          document.dispatchEvent(closeEvent);
+        }
+      }, 100);
+    }
+  };
+
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
@@ -56,18 +74,8 @@ function Calendar({
         IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4" />,
         IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
       }}
-      onDayClick={(day, modifiers) => {
-        if (!modifiers.disabled) {
-          // Close calendar popover after selection
-          const popoverElement = document.querySelector('[data-state="open"][role="dialog"]');
-          if (popoverElement) {
-            const closeButton = popoverElement.querySelector('[data-radix-collection-item]');
-            if (closeButton && closeButton instanceof HTMLElement) {
-              closeButton.click();
-            }
-          }
-        }
-      }}
+      onDayClick={handleDayClick}
+      onSelect={onSelect}
       {...props}
     />
   );

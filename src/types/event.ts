@@ -18,4 +18,23 @@ export interface Demand {
   urgency: 'overdue' | 'today' | 'tomorrow' | 'future';
 }
 
-export type TabType = 'demands' | 'archived' | 'completed';
+export interface CRM {
+  id: string;
+  name: string;
+  contact: string;
+  email: string;
+  subject: string;
+  file?: string;
+  date: Date;
+  completed: boolean;
+}
+
+export interface Note {
+  id: string;
+  title: string;
+  subject: string;
+  date: Date;
+  author: 'Thiago' | 'Kalil';
+}
+
+export type TabType = 'demands' | 'overview' | 'crm' | 'notes' | 'archived' | 'completed';

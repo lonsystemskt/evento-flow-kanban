@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -71,21 +72,21 @@ const EventRow = ({
   console.log('Active demands:', activeDemands);
 
   return (
-    <div className="py-1 px-3 relative bg-transparent border-b border-gray-100/30 hover:bg-gray-50/20 transition-all duration-200">
+    <div className="py-1 px-2 relative bg-transparent border-b border-gray-200/20 hover:bg-gray-50/20 transition-all duration-200">
       <div className="flex items-center gap-3 min-h-[100px]">
         {/* Fixed Event Info Section - Left Side */}
         <div className="flex items-center gap-2 w-44 flex-shrink-0">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-50/50 to-green-50/50 rounded-full flex items-center justify-center cursor-pointer hover:bg-gradient-to-br hover:from-blue-100/50 hover:to-green-100/50 transition-all duration-200 relative group">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-50/50 to-green-50/50 rounded-full flex items-center justify-center cursor-pointer hover:bg-gradient-to-br hover:from-blue-100/50 hover:to-green-100/50 transition-all duration-200 relative group">
                 {event.logo ? (
-                  <img src={event.logo} alt={event.name} className="w-8 h-8 rounded-full object-cover" />
+                  <img src={event.logo} alt={event.name} className="w-12 h-12 rounded-full object-cover" />
                 ) : (
-                  <span className="text-[#122A3A] font-bold text-sm">{event.name.charAt(0).toUpperCase()}</span>
+                  <span className="text-[#122A3A] font-bold text-base">{event.name.charAt(0).toUpperCase()}</span>
                 )}
               </div>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-44 bg-white rounded-lg">
+            <DropdownMenuContent align="start" className="w-44 bg-white rounded-lg z-50">
               <DropdownMenuItem onClick={() => onEditEvent(event)} className="cursor-pointer hover:bg-gray-50 text-xs">
                 <Edit className="w-3 h-3 mr-2" />
                 Editar evento
@@ -104,7 +105,7 @@ const EventRow = ({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <div className="flex-1 min-w-0 max-w-[120px]">
+          <div className="flex-1 min-w-0 max-w-[100px] flex flex-col">
             <h3 className="text-sm font-bold text-[#122A3A] truncate leading-tight mb-0.5">{event.name}</h3>
             <p className="text-[10px] text-[#122A3A]/60 font-medium">{event.date.toLocaleDateString('pt-BR')}</p>
           </div>
