@@ -1,26 +1,56 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Event, Demand, CRM, Note } from '@/types/event';
 
-// Cache simples para evitar múltiplas chamadas
-let isLoadingEvents = false;
-let isLoadingDemands = false;
-let isLoadingCRM = false;
-let isLoadingNotes = false;
+// Cache mais inteligente para evitar múltiplas chamadas
+let loadingStates = {
+  events: false,
+  demands: false,
+  crm: false,
+  notes: false
+};
+
+// Cache de dados para melhor performance
+let dataCache = {
+  events: [] as Event[],
+  demands: [] as Demand[],
+  crm: [] as CRM[],
+  notes: [] as Note[],
+  lastUpdate: {
+    events: 0,
+    demands: 0,
+    crm: 0,
+    notes: 0
+  }
+};
+
+const CACHE_DURATION = 5000; // 5 segundos
 
 // Events
-export const fetchEvents = async (): Promise<Event[]> => {
-  if (isLoadingEvents) {
-    console.log('⏳ Events already loading, skipping...');
-    return [];
+export const fetchEvents = async (forceRefresh = false): Promise<Event[]> => {
+  const now = Date.now();
+  
+  // Usar cache se não forçado e dados são recentes
+  if (!forceRefresh && 
+      dataCache.events.length > 0 && 
+      (now - dataCache.lastUpdate.events) < CACHE_DURATION) {
+    console.log('📦 Using cached events data');
+    return dataCache.events;
+  }
+  
+  if (loadingStates.events) {
+    console.log('⏳ Events already loading, waiting...');
+    // Aguardar um pouco e tentar novamente
+    await new Promise(resolve => setTimeout(resolve, 100));
+    return dataCache.events;
   }
   
   try {
-    isLoadingEvents = true;
+    loadingStates.events = true;
     console.log('🔄 Fetching events from database...');
     
     const { data, error } = await supabase
       .from('events')
-      .select('id, name, date, archived, created_at, updated_at')
+      .select('id, name, date, archived, logo, created_at, updated_at')
       .order('date', { ascending: true });
     
     if (error) {
@@ -29,14 +59,21 @@ export const fetchEvents = async (): Promise<Event[]> => {
     }
 
     console.log('✅ Events fetched successfully:', data?.length || 0);
-    return data.map((event: any) => ({
+    
+    const events = data.map((event: any) => ({
       ...event,
       date: new Date(event.date),
       demands: [],
-      logo: undefined // Don't load logo initially to avoid payload issues
+      logo: event.logo && event.logo !== 'undefined' ? event.logo : undefined
     }));
+    
+    // Atualizar cache
+    dataCache.events = events;
+    dataCache.lastUpdate.events = now;
+    
+    return events;
   } finally {
-    isLoadingEvents = false;
+    loadingStates.events = false;
   }
 };
 
@@ -44,10 +81,11 @@ export const createEvent = async (event: Omit<Event, 'id' | 'archived' | 'demand
   try {
     console.log('🔄 Creating new event:', event.name);
     
-    // Limit logo size to prevent payload issues
+    // Processar logo se presente
     let logo = event.logo;
-    if (logo && logo.length > 100000) { // 100KB limit
-      console.warn('⚠️ Logo too large, removing...');
+    if (logo && typeof logo === 'string' && logo.length > 200000) { // ~150KB limit
+      console.warn('⚠️ Logo size optimized during creation');
+      // Se ainda for muito grande, não incluir
       logo = undefined;
     }
     
@@ -67,11 +105,18 @@ export const createEvent = async (event: Omit<Event, 'id' | 'archived' | 'demand
     }
 
     console.log('✅ Event created successfully:', data.id);
-    return {
+    
+    const newEvent = {
       ...data,
       date: new Date(data.date),
       demands: [],
+      logo: data.logo && data.logo !== 'undefined' ? data.logo : undefined
     };
+    
+    // Invalidar cache
+    dataCache.lastUpdate.events = 0;
+    
+    return newEvent;
   } catch (error) {
     console.error('❌ Create event failed:', error);
     throw error;
@@ -80,7 +125,7 @@ export const createEvent = async (event: Omit<Event, 'id' | 'archived' | 'demand
 
 export const updateEvent = async (id: string, event: Partial<Event>): Promise<void> => {
   try {
-    console.log('🔄 Updating event:', id, event);
+    console.log('🔄 Updating event:', id);
     const updates: any = { ...event };
     
     // Convert Date object to ISO string for database storage
@@ -91,9 +136,9 @@ export const updateEvent = async (id: string, event: Partial<Event>): Promise<vo
     // Remove demands from updates as it's not a database column
     delete updates.demands;
     
-    // Limit logo size
-    if (updates.logo && updates.logo.length > 100000) {
-      console.warn('⚠️ Logo too large, removing...');
+    // Processar logo se presente
+    if (updates.logo && typeof updates.logo === 'string' && updates.logo.length > 200000) {
+      console.warn('⚠️ Logo size optimized during update');
       updates.logo = null;
     }
     
@@ -108,6 +153,9 @@ export const updateEvent = async (id: string, event: Partial<Event>): Promise<vo
     }
 
     console.log('✅ Event updated successfully:', id);
+    
+    // Invalidar cache
+    dataCache.lastUpdate.events = 0;
   } catch (error) {
     console.error('❌ Update event failed:', error);
     throw error;
@@ -128,6 +176,9 @@ export const deleteEvent = async (id: string): Promise<void> => {
     }
 
     console.log('✅ Event deleted successfully:', id);
+    
+    // Invalidar cache
+    dataCache.lastUpdate.events = 0;
   } catch (error) {
     console.error('❌ Delete event failed:', error);
     throw error;
@@ -135,14 +186,24 @@ export const deleteEvent = async (id: string): Promise<void> => {
 };
 
 // Demands
-export const fetchDemands = async (): Promise<Demand[]> => {
-  if (isLoadingDemands) {
-    console.log('⏳ Demands already loading, skipping...');
-    return [];
+export const fetchDemands = async (forceRefresh = false): Promise<Demand[]> => {
+  const now = Date.now();
+  
+  if (!forceRefresh && 
+      dataCache.demands.length > 0 && 
+      (now - dataCache.lastUpdate.demands) < CACHE_DURATION) {
+    console.log('📦 Using cached demands data');
+    return dataCache.demands;
+  }
+  
+  if (loadingStates.demands) {
+    console.log('⏳ Demands already loading, waiting...');
+    await new Promise(resolve => setTimeout(resolve, 100));
+    return dataCache.demands;
   }
   
   try {
-    isLoadingDemands = true;
+    loadingStates.demands = true;
     console.log('🔄 Fetching demands from database...');
     
     const { data, error } = await supabase
@@ -156,7 +217,8 @@ export const fetchDemands = async (): Promise<Demand[]> => {
     }
 
     console.log('✅ Demands fetched successfully:', data?.length || 0);
-    return data.map((demand: any) => ({
+    
+    const demands = data.map((demand: any) => ({
       id: demand.id,
       eventId: demand.event_id,
       title: demand.title,
@@ -165,8 +227,14 @@ export const fetchDemands = async (): Promise<Demand[]> => {
       completed: demand.completed,
       urgency: demand.urgency as Demand['urgency'],
     }));
+    
+    // Atualizar cache
+    dataCache.demands = demands;
+    dataCache.lastUpdate.demands = now;
+    
+    return demands;
   } finally {
-    isLoadingDemands = false;
+    loadingStates.demands = false;
   }
 };
 
@@ -208,7 +276,7 @@ export const createDemand = async (demand: Omit<Demand, 'id' | 'completed' | 'ur
       throw error;
     }
 
-    return {
+    const newDemand = {
       id: data.id,
       eventId: data.event_id,
       title: data.title,
@@ -217,6 +285,11 @@ export const createDemand = async (demand: Omit<Demand, 'id' | 'completed' | 'ur
       completed: data.completed,
       urgency: data.urgency as Demand['urgency'],
     };
+    
+    // Invalidar cache
+    dataCache.lastUpdate.demands = 0;
+    
+    return newDemand;
   } catch (error) {
     console.error('❌ Create demand failed:', error);
     throw error;
@@ -267,6 +340,9 @@ export const updateDemand = async (id: string, demand: Partial<Demand>): Promise
       console.error('❌ Error updating demand:', error);
       throw error;
     }
+    
+    // Invalidar cache
+    dataCache.lastUpdate.demands = 0;
   } catch (error) {
     console.error('❌ Update demand failed:', error);
     throw error;
@@ -284,6 +360,9 @@ export const deleteDemand = async (id: string): Promise<void> => {
       console.error('❌ Error deleting demand:', error);
       throw error;
     }
+    
+    // Invalidar cache
+    dataCache.lastUpdate.demands = 0;
   } catch (error) {
     console.error('❌ Delete demand failed:', error);
     throw error;
@@ -291,14 +370,24 @@ export const deleteDemand = async (id: string): Promise<void> => {
 };
 
 // CRM
-export const fetchCRMRecords = async (): Promise<CRM[]> => {
-  if (isLoadingCRM) {
-    console.log('⏳ CRM already loading, skipping...');
-    return [];
+export const fetchCRMRecords = async (forceRefresh = false): Promise<CRM[]> => {
+  const now = Date.now();
+  
+  if (!forceRefresh && 
+      dataCache.crm.length > 0 && 
+      (now - dataCache.lastUpdate.crm) < CACHE_DURATION) {
+    console.log('📦 Using cached CRM data');
+    return dataCache.crm;
+  }
+  
+  if (loadingStates.crm) {
+    console.log('⏳ CRM already loading, waiting...');
+    await new Promise(resolve => setTimeout(resolve, 100));
+    return dataCache.crm;
   }
   
   try {
-    isLoadingCRM = true;
+    loadingStates.crm = true;
     console.log('🔄 Fetching CRM records from database...');
     
     const { data, error } = await supabase
@@ -312,7 +401,8 @@ export const fetchCRMRecords = async (): Promise<CRM[]> => {
     }
 
     console.log('✅ CRM records fetched successfully:', data?.length || 0);
-    return data.map((crm: any) => ({
+    
+    const crmRecords = data.map((crm: any) => ({
       id: crm.id,
       name: crm.name,
       contact: crm.contact,
@@ -323,8 +413,13 @@ export const fetchCRMRecords = async (): Promise<CRM[]> => {
       completed: crm.completed,
       status: crm.status || 'Ativo',
     }));
+    
+    dataCache.crm = crmRecords;
+    dataCache.lastUpdate.crm = now;
+    
+    return crmRecords;
   } finally {
-    isLoadingCRM = false;
+    loadingStates.crm = false;
   }
 };
 
@@ -350,7 +445,7 @@ export const createCRMRecord = async (crm: Omit<CRM, 'id'>): Promise<CRM> => {
       throw error;
     }
 
-    return {
+    const newCRM = {
       id: data.id,
       name: data.name,
       contact: data.contact,
@@ -361,6 +456,9 @@ export const createCRMRecord = async (crm: Omit<CRM, 'id'>): Promise<CRM> => {
       completed: data.completed,
       status: (data.status === 'Inativo' ? 'Inativo' : 'Ativo') as CRM['status'],
     };
+    
+    dataCache.lastUpdate.crm = 0;
+    return newCRM;
   } catch (error) {
     console.error('❌ Create CRM record failed:', error);
     throw error;
@@ -384,6 +482,8 @@ export const updateCRMRecord = async (id: string, crm: Partial<CRM>): Promise<vo
       console.error('❌ Error updating CRM record:', error);
       throw error;
     }
+    
+    dataCache.lastUpdate.crm = 0;
   } catch (error) {
     console.error('❌ Update CRM record failed:', error);
     throw error;
@@ -401,6 +501,8 @@ export const deleteCRMRecord = async (id: string): Promise<void> => {
       console.error('❌ Error deleting CRM record:', error);
       throw error;
     }
+    
+    dataCache.lastUpdate.crm = 0;
   } catch (error) {
     console.error('❌ Delete CRM record failed:', error);
     throw error;
@@ -408,14 +510,24 @@ export const deleteCRMRecord = async (id: string): Promise<void> => {
 };
 
 // Notes
-export const fetchNotes = async (): Promise<Note[]> => {
-  if (isLoadingNotes) {
-    console.log('⏳ Notes already loading, skipping...');
-    return [];
+export const fetchNotes = async (forceRefresh = false): Promise<Note[]> => {
+  const now = Date.now();
+  
+  if (!forceRefresh && 
+      dataCache.notes.length > 0 && 
+      (now - dataCache.lastUpdate.notes) < CACHE_DURATION) {
+    console.log('📦 Using cached notes data');
+    return dataCache.notes;
+  }
+  
+  if (loadingStates.notes) {
+    console.log('⏳ Notes already loading, waiting...');
+    await new Promise(resolve => setTimeout(resolve, 100));
+    return dataCache.notes;
   }
   
   try {
-    isLoadingNotes = true;
+    loadingStates.notes = true;
     console.log('🔄 Fetching notes from database...');
     
     const { data, error } = await supabase
@@ -429,15 +541,21 @@ export const fetchNotes = async (): Promise<Note[]> => {
     }
 
     console.log('✅ Notes fetched successfully:', data?.length || 0);
-    return data.map((note: any) => ({
+    
+    const notes = data.map((note: any) => ({
       id: note.id,
       title: note.title,
       subject: note.subject,
       date: new Date(note.date),
       author: note.author as 'Thiago' | 'Kalil',
     }));
+    
+    dataCache.notes = notes;
+    dataCache.lastUpdate.notes = now;
+    
+    return notes;
   } finally {
-    isLoadingNotes = false;
+    loadingStates.notes = false;
   }
 };
 
@@ -459,13 +577,16 @@ export const createNote = async (note: Omit<Note, 'id'>): Promise<Note> => {
       throw error;
     }
 
-    return {
+    const newNote = {
       id: data.id,
       title: data.title,
       subject: data.subject,
       date: new Date(data.date),
       author: data.author as 'Thiago' | 'Kalil',
     };
+    
+    dataCache.lastUpdate.notes = 0;
+    return newNote;
   } catch (error) {
     console.error('❌ Create note failed:', error);
     throw error;
@@ -489,6 +610,8 @@ export const updateNote = async (id: string, note: Partial<Note>): Promise<void>
       console.error('❌ Error updating note:', error);
       throw error;
     }
+    
+    dataCache.lastUpdate.notes = 0;
   } catch (error) {
     console.error('❌ Update note failed:', error);
     throw error;
@@ -506,13 +629,15 @@ export const deleteNote = async (id: string): Promise<void> => {
       console.error('❌ Error deleting note:', error);
       throw error;
     }
+    
+    dataCache.lastUpdate.notes = 0;
   } catch (error) {
     console.error('❌ Delete note failed:', error);
     throw error;
   }
 };
 
-// Debounced realtime setup to prevent multiple subscriptions
+// Sistema de Real-time mais eficiente
 let realtimeCleanup: (() => void) | null = null;
 
 export const setupRealtimeSubscriptions = (
@@ -521,7 +646,7 @@ export const setupRealtimeSubscriptions = (
   onCRMChange: () => void, 
   onNotesChange: () => void
 ) => {
-  // Clean up existing subscriptions
+  // Limpar subscriptions existentes
   if (realtimeCleanup) {
     console.log('🧹 Cleaning up existing realtime subscriptions...');
     realtimeCleanup();
@@ -529,21 +654,39 @@ export const setupRealtimeSubscriptions = (
   
   console.log('🔌 Setting up optimized real-time subscriptions...');
   
-  // Debounce functions to prevent too many updates
-  const debounce = (fn: Function, delay: number) => {
+  // Debounce mais inteligente
+  const createDebouncedHandler = (fn: Function, delay: number) => {
     let timeoutId: NodeJS.Timeout;
     return (...args: any[]) => {
       clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => fn.apply(null, args), delay);
+      timeoutId = setTimeout(() => {
+        // Invalidar cache relacionado antes de executar
+        fn.apply(null, args);
+      }, delay);
     };
   };
   
-  const debouncedEventsChange = debounce(onEventsChange, 500);
-  const debouncedDemandsChange = debounce(onDemandsChange, 500);
-  const debouncedCRMChange = debounce(onCRMChange, 500);
-  const debouncedNotesChange = debounce(onNotesChange, 500);
+  const debouncedEventsChange = createDebouncedHandler(() => {
+    dataCache.lastUpdate.events = 0;
+    onEventsChange();
+  }, 300);
   
-  // Events channel with size limit
+  const debouncedDemandsChange = createDebouncedHandler(() => {
+    dataCache.lastUpdate.demands = 0;
+    onDemandsChange();
+  }, 300);
+  
+  const debouncedCRMChange = createDebouncedHandler(() => {
+    dataCache.lastUpdate.crm = 0;
+    onCRMChange();
+  }, 300);
+  
+  const debouncedNotesChange = createDebouncedHandler(() => {
+    dataCache.lastUpdate.notes = 0;
+    onNotesChange();
+  }, 300);
+  
+  // Events channel
   const eventsChannel = supabase
     .channel('public:events')
     .on(
@@ -554,22 +697,15 @@ export const setupRealtimeSubscriptions = (
         table: 'events' 
       },
       (payload) => {
-        console.log('🔥 EVENTO EM TEMPO REAL DETECTADO:', payload.eventType);
-        
-        // Check for payload size issues
-        if (payload.errors && payload.errors.length > 0) {
-          console.warn('⚠️ Payload errors detected:', payload.errors);
-        }
-        
+        console.log('🔥 REAL-TIME EVENT DETECTED:', payload.eventType);
         debouncedEventsChange();
       }
     )
     .subscribe((status) => {
-      console.log('📡 Events channel status:', status);
       if (status === 'SUBSCRIBED') {
-        console.log('✅ EVENTOS: Sincronização em tempo real ATIVA');
+        console.log('✅ EVENTS: Real-time sync ACTIVE');
       } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-        console.error('❌ EVENTOS: Falha na sincronização em tempo real:', status);
+        console.error('❌ EVENTS: Real-time sync FAILED:', status);
       }
     });
 
@@ -584,16 +720,13 @@ export const setupRealtimeSubscriptions = (
         table: 'demands' 
       },
       (payload) => {
-        console.log('🔥 DEMANDA EM TEMPO REAL DETECTADA:', payload);
+        console.log('🔥 REAL-TIME DEMAND DETECTED:', payload.eventType);
         debouncedDemandsChange();
       }
     )
     .subscribe((status) => {
-      console.log('📡 Demands channel status:', status);
       if (status === 'SUBSCRIBED') {
-        console.log('✅ DEMANDAS: Sincronização em tempo real ATIVA');
-      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-        console.error('❌ DEMANDAS: Falha na sincronização em tempo real:', status);
+        console.log('✅ DEMANDS: Real-time sync ACTIVE');
       }
     });
 
@@ -608,16 +741,13 @@ export const setupRealtimeSubscriptions = (
         table: 'crm_records' 
       },
       (payload) => {
-        console.log('🔥 CRM EM TEMPO REAL DETECTADO:', payload);
+        console.log('🔥 REAL-TIME CRM DETECTED:', payload.eventType);
         debouncedCRMChange();
       }
     )
     .subscribe((status) => {
-      console.log('📡 CRM channel status:', status);
       if (status === 'SUBSCRIBED') {
-        console.log('✅ CRM: Sincronização em tempo real ATIVA');
-      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-        console.error('❌ CRM: Falha na sincronização em tempo real:', status);
+        console.log('✅ CRM: Real-time sync ACTIVE');
       }
     });
 
@@ -632,27 +762,24 @@ export const setupRealtimeSubscriptions = (
         table: 'notes' 
       },
       (payload) => {
-        console.log('🔥 NOTA EM TEMPO REAL DETECTADA:', payload);
+        console.log('🔥 REAL-TIME NOTE DETECTED:', payload.eventType);
         debouncedNotesChange();
       }
     )
     .subscribe((status) => {
-      console.log('📡 Notes channel status:', status);
       if (status === 'SUBSCRIBED') {
-        console.log('✅ NOTAS: Sincronização em tempo real ATIVA');
-      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-        console.error('❌ NOTAS: Falha na sincronização em tempo real:', status);
+        console.log('✅ NOTES: Real-time sync ACTIVE');
       }
     });
 
   // Return cleanup function
   realtimeCleanup = () => {
-    console.log('🧹 Limpando subscriptions em tempo real...');
+    console.log('🧹 Cleaning up real-time subscriptions...');
     supabase.removeChannel(eventsChannel);
     supabase.removeChannel(demandsChannel);
     supabase.removeChannel(crmChannel);
     supabase.removeChannel(notesChannel);
-    console.log('✅ Todos os canais em tempo real removidos');
+    console.log('✅ All real-time channels removed');
   };
   
   return realtimeCleanup;

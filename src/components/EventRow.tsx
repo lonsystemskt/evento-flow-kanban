@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Plus, ChevronLeft, ChevronRight, Edit, Archive, Trash2 } from 'lucide-react';
@@ -17,7 +17,7 @@ interface EventRowProps {
   onDeleteEvent: (eventId: string) => void;
 }
 
-const EventRow = ({ 
+const EventRow = React.memo(({ 
   event, 
   onAddDemand, 
   onUpdateDemand, 
@@ -28,12 +28,10 @@ const EventRow = ({
 }: EventRowProps) => {
   const [isDemandModalOpen, setIsDemandModalOpen] = useState(false);
   const [editingDemand, setEditingDemand] = useState<Demand | null>(null);
+  const [logoError, setLogoError] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  console.log('EventRow rendering with event:', event);
-  console.log('Event demands:', event.demands);
-
-  const scroll = (direction: 'left' | 'right') => {
+  const scroll = useCallback((direction: 'left' | 'right') => {
     if (scrollContainerRef.current) {
       const scrollAmount = 190;
       const currentScroll = scrollContainerRef.current.scrollLeft;
@@ -46,19 +44,19 @@ const EventRow = ({
         behavior: 'smooth'
       });
     }
-  };
+  }, []);
 
-  const handleAddDemand = () => {
+  const handleAddDemand = useCallback(() => {
     setEditingDemand(null);
     setIsDemandModalOpen(true);
-  };
+  }, []);
 
-  const handleEditDemand = (demand: Demand) => {
+  const handleEditDemand = useCallback((demand: Demand) => {
     setEditingDemand(demand);
     setIsDemandModalOpen(true);
-  };
+  }, []);
 
-  const handleSaveDemand = (demandData: Omit<Demand, 'id' | 'eventId' | 'completed' | 'urgency'>) => {
+  const handleSaveDemand = useCallback((demandData: Omit<Demand, 'id' | 'eventId' | 'completed' | 'urgency'>) => {
     if (editingDemand) {
       onUpdateDemand(event.id, editingDemand.id, demandData);
     } else {
@@ -66,10 +64,46 @@ const EventRow = ({
     }
     setIsDemandModalOpen(false);
     setEditingDemand(null);
-  };
+  }, [editingDemand, event.id, onUpdateDemand, onAddDemand]);
 
-  const activeDemands = event.demands.filter(demand => !demand.completed);
-  console.log('Active demands:', activeDemands);
+  const handleEditEvent = useCallback(() => {
+    onEditEvent(event);
+  }, [event, onEditEvent]);
+
+  const handleArchiveEvent = useCallback(() => {
+    onArchiveEvent(event.id);
+  }, [event.id, onArchiveEvent]);
+
+  const handleDeleteEvent = useCallback(() => {
+    onDeleteEvent(event.id);
+  }, [event.id, onDeleteEvent]);
+
+  const handleLogoError = useCallback(() => {
+    setLogoError(true);
+    console.error('Erro ao carregar logo do evento:', event.name);
+  }, [event.name]);
+
+  const activeDemands = useMemo(() => 
+    event.demands.filter(demand => !demand.completed),
+    [event.demands]
+  );
+
+  const logoSrc = useMemo(() => {
+    if (logoError || !event.logo || event.logo === 'undefined') {
+      return null;
+    }
+    return event.logo;
+  }, [event.logo, logoError]);
+
+  const eventInitial = useMemo(() => 
+    event.name.charAt(0).toUpperCase(),
+    [event.name]
+  );
+
+  const formattedDate = useMemo(() => 
+    event.date.toLocaleDateString('pt-BR'),
+    [event.date]
+  );
 
   return (
     <div className="py-1 px-2 relative bg-transparent border-b border-gray-200/20 hover:bg-gray-50/20 transition-all duration-200">
@@ -79,24 +113,35 @@ const EventRow = ({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <div className="w-12 h-12 bg-gradient-to-br from-[#467BCA]/10 to-[#77D1A8]/10 rounded-full flex items-center justify-center cursor-pointer hover:bg-gradient-to-br hover:from-[#467BCA]/20 hover:to-[#77D1A8]/20 transition-all duration-200 relative group border border-gradient-to-r border-[#467BCA]/30 border-[#77D1A8]/30 shadow-sm">
-                {event.logo ? (
-                  <img src={event.logo} alt={event.name} className="w-12 h-12 rounded-full object-cover border border-gradient-to-r border-[#467BCA]/30 border-[#77D1A8]/30" />
+                {logoSrc ? (
+                  <img 
+                    src={logoSrc} 
+                    alt={event.name} 
+                    className="w-12 h-12 rounded-full object-cover border border-gradient-to-r border-[#467BCA]/30 border-[#77D1A8]/30" 
+                    onError={handleLogoError}
+                    loading="lazy"
+                    style={{ 
+                      imageRendering: 'auto',
+                      objectFit: 'cover',
+                      objectPosition: 'center'
+                    }}
+                  />
                 ) : (
-                  <span className="text-[#122A3A] font-bold text-base">{event.name.charAt(0).toUpperCase()}</span>
+                  <span className="text-[#122A3A] font-bold text-base">{eventInitial}</span>
                 )}
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-44 bg-white rounded-lg z-50">
-              <DropdownMenuItem onClick={() => onEditEvent(event)} className="cursor-pointer hover:bg-gray-50 text-xs">
+              <DropdownMenuItem onClick={handleEditEvent} className="cursor-pointer hover:bg-gray-50 text-xs">
                 <Edit className="w-3 h-3 mr-2" />
                 Editar evento
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onArchiveEvent(event.id)} className="cursor-pointer hover:bg-gray-50 text-xs">
+              <DropdownMenuItem onClick={handleArchiveEvent} className="cursor-pointer hover:bg-gray-50 text-xs">
                 <Archive className="w-3 h-3 mr-2" />
                 Arquivar evento
               </DropdownMenuItem>
               <DropdownMenuItem 
-                onClick={() => onDeleteEvent(event.id)} 
+                onClick={handleDeleteEvent} 
                 className="cursor-pointer text-red-500 focus:text-red-500 hover:bg-red-50 text-xs"
               >
                 <Trash2 className="w-3 h-3 mr-2" />
@@ -107,7 +152,7 @@ const EventRow = ({
 
           <div className="flex-1 min-w-0 max-w-[100px] flex flex-col text-left">
             <h3 className="text-sm font-bold text-[#122A3A] truncate leading-tight mb-0.5">{event.name}</h3>
-            <p className="text-xs text-[#122A3A]/60 font-bold">{event.date.toLocaleDateString('pt-BR')}</p>
+            <p className="text-xs text-[#122A3A]/60 font-bold">{formattedDate}</p>
           </div>
 
           <Button
@@ -182,6 +227,8 @@ const EventRow = ({
       />
     </div>
   );
-};
+});
+
+EventRow.displayName = 'EventRow';
 
 export default EventRow;
