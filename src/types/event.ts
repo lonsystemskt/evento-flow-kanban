@@ -27,6 +27,7 @@ export interface CRM {
   file?: string;
   date: Date;
   completed: boolean;
+  status: 'Ativo' | 'Inativo';
 }
 
 export interface Note {

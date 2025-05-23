@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Event, Demand, CRM, Note } from '@/types/event';
 
@@ -218,6 +217,7 @@ export const fetchCRMRecords = async (): Promise<CRM[]> => {
   return data.map((crm: any) => ({
     ...crm,
     date: new Date(crm.date),
+    status: crm.status || 'Ativo', // Default to 'Ativo' if not set
   }));
 };
 
@@ -232,6 +232,7 @@ export const createCRMRecord = async (crm: Omit<CRM, 'id'>): Promise<CRM> => {
       file: crm.file,
       date: crm.date.toISOString(),
       completed: crm.completed,
+      status: crm.status,
     })
     .select()
     .single();

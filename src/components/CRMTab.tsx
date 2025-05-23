@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Edit, Plus } from 'lucide-react';
+import { Edit, Plus, Trash2 } from 'lucide-react';
 import { CRM } from '@/types/event';
 import CRMModal from './CRMModal';
 
@@ -36,6 +36,12 @@ const CRMTab = ({ crmRecords, onAddCRM, onUpdateCRM, onDeleteCRM }: CRMTabProps)
     setEditingCRM(null);
   };
 
+  const handleDeleteCRM = (id: string) => {
+    if (confirm('Tem certeza que deseja excluir este contato?')) {
+      onDeleteCRM(id);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
@@ -51,10 +57,10 @@ const CRMTab = ({ crmRecords, onAddCRM, onUpdateCRM, onDeleteCRM }: CRMTabProps)
       <div className="space-y-1">
         {crmRecords.length > 0 ? (
           crmRecords.map((crm) => (
-            <div key={crm.id} className="bg-gray-50/40 rounded-lg border border-gray-200/30 p-3 hover:bg-gray-50/60 transition-all duration-200">
+            <div key={crm.id} className="bg-[#F6F7FB] rounded-lg border border-gray-200/30 p-3 hover:bg-gray-50/60 transition-all duration-200">
               <div className="flex items-center gap-3">
                 {/* Status Indicator */}
-                <div className={`w-3 h-3 rounded-full ${crm.completed ? 'bg-green-500' : 'bg-gray-400'} flex-shrink-0`}></div>
+                <div className={`w-3 h-3 rounded-full ${crm.status === 'Ativo' ? 'bg-green-500' : 'bg-red-500'} flex-shrink-0`}></div>
 
                 {/* Name */}
                 <div className="min-w-0 w-40 flex-shrink-0 text-left">
@@ -74,6 +80,17 @@ const CRMTab = ({ crmRecords, onAddCRM, onUpdateCRM, onDeleteCRM }: CRMTabProps)
                 {/* Subject */}
                 <div className="flex-1 min-w-0 text-left">
                   <p className="text-xs text-[#122A3A] truncate">{crm.subject}</p>
+                </div>
+
+                {/* Status */}
+                <div className="text-xs font-medium w-16 text-center flex-shrink-0">
+                  <span className={`px-2 py-1 rounded-full text-xs ${
+                    crm.status === 'Ativo' 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {crm.status}
+                  </span>
                 </div>
 
                 {/* Date */}
@@ -106,21 +123,17 @@ const CRMTab = ({ crmRecords, onAddCRM, onUpdateCRM, onDeleteCRM }: CRMTabProps)
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => onUpdateCRM(crm.id, { completed: !crm.completed })}
-                    className={`w-8 h-8 p-0 rounded-md transition-colors duration-200 ${
-                      crm.completed 
-                        ? 'hover:bg-gray-50 hover:text-gray-600' 
-                        : 'hover:bg-green-50 hover:text-green-600'
-                    }`}
+                    onClick={() => handleDeleteCRM(crm.id)}
+                    className="w-8 h-8 p-0 hover:bg-red-50 hover:text-red-600 rounded-md transition-colors duration-200"
                   >
-                    ✓
+                    <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
             </div>
           ))
         ) : (
-          <div className="text-left py-20 bg-white rounded-xl border border-gray-200 shadow-sm px-6">
+          <div className="text-left py-20 bg-[#F6F7FB] rounded-xl border border-gray-200 px-6">
             <div className="text-6xl mb-6">📞</div>
             <p className="text-xl font-medium text-[#122A3A] mb-3">Nenhum registro CRM</p>
             <p className="text-base text-[#122A3A]/70">Clique em "Novo Registro CRM" para começar</p>
