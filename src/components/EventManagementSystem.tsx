@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -141,7 +140,7 @@ const EventManagementSystem = () => {
   return (
     <div className="min-h-screen p-4 sm:p-6 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20">
       <div className="max-w-7xl mx-auto">
-        <header className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-[#467BCA] to-[#77D1A8] inline-block text-transparent bg-clip-text mb-3">Lon Demandas</h1>
             <p className="text-[#122A3A]/70 text-lg">Organize seus eventos e demandas de forma visual e intuitiva</p>
@@ -159,8 +158,8 @@ const EventManagementSystem = () => {
           </Button>
         </header>
 
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabType)} className="space-y-8">
-          <div className="flex justify-end mb-6">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabType)} className="space-y-6">
+          <div className="flex justify-end mb-4">
             <TabsList className="bg-white border border-gray-200 rounded-xl shadow-md p-1">
               <TabsTrigger value="demands" className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA]/10 data-[state=active]:to-[#77D1A8]/10 data-[state=active]:text-[#122A3A] rounded-lg px-5 py-3">
                 Início ({activeEvents.length})
@@ -174,8 +173,8 @@ const EventManagementSystem = () => {
             </TabsList>
           </div>
 
-          <TabsContent value="demands" className="space-y-6">
-            <div className="space-y-6">
+          <TabsContent value="demands" className="space-y-1">
+            <div className="space-y-1">
               {activeEvents.map(event => (
                 <EventRow
                   key={event.id}
