@@ -41,7 +41,7 @@ const DemandCard = ({ demand, onEdit, onDelete, onComplete }: DemandCardProps) =
   };
 
   return (
-    <div className="min-w-[176px] max-w-[176px] min-h-[88px] bg-gray-50/40 rounded-lg border border-gray-200/30 flex flex-col p-3">
+    <div className="min-w-[186px] max-w-[186px] min-h-[88px] bg-gray-50/40 rounded-lg border border-gray-200/30 flex flex-col p-3">
       {/* Urgency Indicator */}
       <div className="flex items-center justify-between mb-2">
         <span className={`px-1.5 py-0.5 text-[10px] font-medium rounded-md text-white ${getUrgencyColor(demand.urgency)}`}>

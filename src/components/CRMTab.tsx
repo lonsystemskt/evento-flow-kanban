@@ -58,26 +58,26 @@ const CRMTab = ({ crmRecords, onAddCRM, onUpdateCRM, onDeleteCRM }: CRMTabProps)
 
                 {/* Name */}
                 <div className="min-w-0 w-40 flex-shrink-0">
-                  <p className="text-sm font-medium text-[#122A3A] truncate">{crm.name}</p>
+                  <p className="text-[10px] font-medium text-[#122A3A] truncate">{crm.name}</p>
                 </div>
 
                 {/* Contact */}
                 <div className="min-w-0 w-32 flex-shrink-0">
-                  <p className="text-xs text-[#122A3A]/60 truncate">{crm.contact}</p>
+                  <p className="text-[10px] text-[#122A3A]/60 truncate">{crm.contact}</p>
                 </div>
 
                 {/* Email */}
                 <div className="min-w-0 w-48 flex-shrink-0">
-                  <p className="text-xs text-[#122A3A]/60 truncate">{crm.email}</p>
+                  <p className="text-[10px] text-[#122A3A]/60 truncate">{crm.email}</p>
                 </div>
 
                 {/* Subject */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-[#122A3A] truncate">{crm.subject}</p>
+                  <p className="text-[10px] text-[#122A3A] truncate">{crm.subject}</p>
                 </div>
 
                 {/* Date */}
-                <div className="text-xs text-[#122A3A]/50 font-medium w-20 text-center flex-shrink-0">
+                <div className="text-[10px] text-[#122A3A]/50 font-medium w-20 text-center flex-shrink-0">
                   {crm.date.toLocaleDateString('pt-BR')}
                 </div>
 
@@ -87,7 +87,7 @@ const CRMTab = ({ crmRecords, onAddCRM, onUpdateCRM, onDeleteCRM }: CRMTabProps)
                     variant="ghost"
                     size="sm"
                     onClick={() => window.open(crm.file, '_blank')}
-                    className="text-xs text-blue-600 hover:text-blue-800 flex-shrink-0"
+                    className="text-[10px] text-blue-600 hover:text-blue-800 flex-shrink-0"
                   >
                     Ver arquivo
                   </Button>

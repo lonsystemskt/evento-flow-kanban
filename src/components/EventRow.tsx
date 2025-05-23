@@ -107,7 +107,7 @@ const EventRow = ({
 
           <div className="flex-1 min-w-0 max-w-[100px] flex flex-col">
             <h3 className="text-sm font-bold text-[#122A3A] truncate leading-tight mb-0.5">{event.name}</h3>
-            <p className="text-[10px] text-[#122A3A]/60 font-medium">{event.date.toLocaleDateString('pt-BR')}</p>
+            <p className="text-[11px] text-[#122A3A]/60 font-bold">{event.date.toLocaleDateString('pt-BR')}</p>
           </div>
 
           <Button

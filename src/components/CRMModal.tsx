@@ -25,6 +25,7 @@ const CRMModal = ({ isOpen, onClose, onSave, editingCRM }: CRMModalProps) => {
   const [email, setEmail] = useState('');
   const [subject, setSubject] = useState('');
   const [file, setFile] = useState('');
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [completed, setCompleted] = useState(false);
 
@@ -37,6 +38,7 @@ const CRMModal = ({ isOpen, onClose, onSave, editingCRM }: CRMModalProps) => {
       setFile(editingCRM.file || '');
       setDate(editingCRM.date);
       setCompleted(editingCRM.completed);
+      setUploadedFile(null);
     } else {
       setName('');
       setContact('');
@@ -45,8 +47,19 @@ const CRMModal = ({ isOpen, onClose, onSave, editingCRM }: CRMModalProps) => {
       setFile('');
       setDate(new Date());
       setCompleted(false);
+      setUploadedFile(null);
     }
   }, [editingCRM]);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      setUploadedFile(selectedFile);
+      // Create a URL for the file so it can be accessed later
+      const fileUrl = URL.createObjectURL(selectedFile);
+      setFile(fileUrl);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,19 +131,25 @@ const CRMModal = ({ isOpen, onClose, onSave, editingCRM }: CRMModalProps) => {
           </div>
 
           <div>
-            <Label htmlFor="file" className="text-sm font-medium text-[#122A3A]">Arquivo</Label>
+            <Label className="text-sm font-medium text-[#122A3A]">Arquivo</Label>
             <div className="mt-1 flex items-center gap-2">
               <Input
-                id="file"
-                value={file}
-                onChange={(e) => setFile(e.target.value)}
-                placeholder="URL do arquivo"
+                type="file"
+                onChange={handleFileUpload}
                 className="flex-1"
+                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
               />
-              <Button type="button" variant="outline" size="sm">
-                <Upload className="w-4 h-4" />
+              <Button type="button" variant="outline" size="sm" asChild>
+                <label className="cursor-pointer">
+                  <Upload className="w-4 h-4" />
+                </label>
               </Button>
             </div>
+            {uploadedFile && (
+              <p className="text-xs text-green-600 mt-1">
+                Arquivo selecionado: {uploadedFile.name}
+              </p>
+            )}
           </div>
 
           <div>
