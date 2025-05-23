@@ -23,7 +23,7 @@ let dataCache = {
   }
 };
 
-const CACHE_DURATION = 3000; // 3 segundos para melhor responsividade
+const CACHE_DURATION = 1000; // 1 segundo - reduzido para melhor sincronização
 
 // Events - Otimizado para performance
 export const fetchEvents = async (forceRefresh = false): Promise<Event[]> => {
@@ -52,7 +52,7 @@ export const fetchEvents = async (forceRefresh = false): Promise<Event[]> => {
       .from('events')
       .select('id, name, date, archived, logo, created_at, updated_at')
       .order('date', { ascending: true })
-      .abortSignal(AbortSignal.timeout(8000)); // 8 segundos timeout
+      .abortSignal(AbortSignal.timeout(5000)); // 5 segundos timeout
     
     if (error) {
       console.error('❌ Error fetching events:', error);
@@ -127,8 +127,9 @@ export const createEvent = async (event: Omit<Event, 'id' | 'archived' | 'demand
       logo: data.logo && data.logo !== 'undefined' ? data.logo : undefined
     };
     
-    // Invalidar cache imediatamente
+    // Invalidar cache imediatamente para forçar refresh
     dataCache.lastUpdate.events = 0;
+    dataCache.events = [];
     
     return newEvent;
   } catch (error) {
@@ -173,8 +174,9 @@ export const updateEvent = async (id: string, event: Partial<Event>): Promise<vo
 
     console.log('✅ Event updated successfully:', id);
     
-    // Invalidar cache imediatamente
+    // Invalidar cache imediatamente para forçar refresh
     dataCache.lastUpdate.events = 0;
+    dataCache.events = [];
   } catch (error) {
     console.error('❌ Update event failed:', error);
     throw error;
@@ -196,8 +198,9 @@ export const deleteEvent = async (id: string): Promise<void> => {
 
     console.log('✅ Event deleted successfully:', id);
     
-    // Invalidar cache imediatamente
+    // Invalidar cache imediatamente para forçar refresh
     dataCache.lastUpdate.events = 0;
+    dataCache.events = [];
   } catch (error) {
     console.error('❌ Delete event failed:', error);
     throw error;
@@ -229,7 +232,7 @@ export const fetchDemands = async (forceRefresh = false): Promise<Demand[]> => {
       .from('demands')
       .select('*')
       .order('date', { ascending: true })
-      .abortSignal(AbortSignal.timeout(8000));
+      .abortSignal(AbortSignal.timeout(5000));
     
     if (error) {
       console.error('❌ Error fetching demands:', error);
@@ -415,7 +418,7 @@ export const fetchCRMRecords = async (forceRefresh = false): Promise<CRM[]> => {
       .from('crm_records')
       .select('*')
       .order('date', { ascending: true })
-      .abortSignal(AbortSignal.timeout(8000));
+      .abortSignal(AbortSignal.timeout(5000));
     
     if (error) {
       console.error('❌ Error fetching CRM records:', error);
@@ -565,7 +568,7 @@ export const fetchNotes = async (forceRefresh = false): Promise<Note[]> => {
       .from('notes')
       .select('*')
       .order('date', { ascending: false })
-      .abortSignal(AbortSignal.timeout(8000));
+      .abortSignal(AbortSignal.timeout(5000));
     
     if (error) {
       console.error('❌ Error fetching notes:', error);
@@ -678,7 +681,7 @@ export const deleteNote = async (id: string): Promise<void> => {
   }
 };
 
-// Sistema de Real-time OTIMIZADO e ROBUSTO
+// Sistema de Real-time COMPLETAMENTE REFEITO E ULTRA ROBUSTO
 let realtimeCleanup: (() => void) | null = null;
 let realtimeRetryCount = 0;
 const MAX_RETRY_COUNT = 3;
@@ -695,9 +698,9 @@ export const setupRealtimeSubscriptions = (
     realtimeCleanup();
   }
   
-  console.log('🔌 Setting up OPTIMIZED real-time subscriptions...');
+  console.log('🔌 Setting up ULTRA ROBUST real-time subscriptions...');
   
-  // Debounce inteligente para evitar spam
+  // Debounce AGRESSIVO para evitar spam
   const createDebouncedHandler = (fn: Function, delay: number, name: string) => {
     let timeoutId: NodeJS.Timeout;
     let lastCall = 0;
@@ -706,7 +709,7 @@ export const setupRealtimeSubscriptions = (
       const now = Date.now();
       
       // Evitar chamadas muito frequentes
-      if (now - lastCall < 500) {
+      if (now - lastCall < 200) {
         console.log(`⚡ ${name} change debounced (too frequent)`);
         return;
       }
@@ -720,29 +723,37 @@ export const setupRealtimeSubscriptions = (
     };
   };
   
-  const debouncedEventsChange = createDebouncedHandler(() => {
-    console.log('🔥 EVENTS REALTIME SYNC STARTING...');
-    dataCache.lastUpdate.events = 0; // Força refresh
+  const debouncedEventsChange = createDebouncedHandler(async () => {
+    console.log('🔥🔥🔥 EVENTS REALTIME SYNC STARTING...');
+    // FORÇAR invalidação total do cache
+    dataCache.lastUpdate.events = 0;
+    dataCache.events = [];
     onEventsChange();
-  }, 200, 'EVENTS');
+  }, 100, 'EVENTS');
   
-  const debouncedDemandsChange = createDebouncedHandler(() => {
-    console.log('🔥 DEMANDS REALTIME SYNC STARTING...');
-    dataCache.lastUpdate.demands = 0; // Força refresh
+  const debouncedDemandsChange = createDebouncedHandler(async () => {
+    console.log('🔥🔥🔥 DEMANDS REALTIME SYNC STARTING...');
+    // FORÇAR invalidação total do cache
+    dataCache.lastUpdate.demands = 0;
+    dataCache.demands = [];
     onDemandsChange();
-  }, 200, 'DEMANDS');
+  }, 100, 'DEMANDS');
   
-  const debouncedCRMChange = createDebouncedHandler(() => {
-    console.log('🔥 CRM REALTIME SYNC STARTING...');
-    dataCache.lastUpdate.crm = 0; // Força refresh
+  const debouncedCRMChange = createDebouncedHandler(async () => {
+    console.log('🔥🔥🔥 CRM REALTIME SYNC STARTING...');
+    // FORÇAR invalidação total do cache
+    dataCache.lastUpdate.crm = 0;
+    dataCache.crm = [];
     onCRMChange();
-  }, 200, 'CRM');
+  }, 100, 'CRM');
   
-  const debouncedNotesChange = createDebouncedHandler(() => {
-    console.log('🔥 NOTES REALTIME SYNC STARTING...');
-    dataCache.lastUpdate.notes = 0; // Força refresh
+  const debouncedNotesChange = createDebouncedHandler(async () => {
+    console.log('🔥🔥🔥 NOTES REALTIME SYNC STARTING...');
+    // FORÇAR invalidação total do cache
+    dataCache.lastUpdate.notes = 0;
+    dataCache.notes = [];
     onNotesChange();
-  }, 200, 'NOTES');
+  }, 100, 'NOTES');
   
   // Função para reconectar em caso de erro
   const setupChannelWithRetry = (channelName: string, tableName: string, handler: Function) => {
@@ -756,7 +767,7 @@ export const setupRealtimeSubscriptions = (
           table: tableName 
         },
         (payload) => {
-          console.log(`🔥 REAL-TIME ${tableName.toUpperCase()} DETECTED:`, payload.eventType, payload.new?.id || payload.old?.id);
+          console.log(`🔥🔥🔥 REAL-TIME ${tableName.toUpperCase()} DETECTED:`, payload.eventType, payload.new?.id || payload.old?.id);
           handler();
         }
       )
@@ -776,7 +787,7 @@ export const setupRealtimeSubscriptions = (
             setTimeout(() => {
               supabase.removeChannel(channel);
               setupChannelWithRetry(channelName, tableName, handler);
-            }, 2000 * realtimeRetryCount); // Exponential backoff
+            }, 1000 * realtimeRetryCount); // Exponential backoff reduzido
           } else {
             console.error(`💀 ${tableName.toUpperCase()}: Max retries reached. Real-time disabled for this table.`);
           }
@@ -819,11 +830,13 @@ export const setupRealtimeSubscriptions = (
 export const invalidateCache = (type?: 'events' | 'demands' | 'crm' | 'notes') => {
   if (type) {
     dataCache.lastUpdate[type] = 0;
-    console.log(`🔄 Cache invalidated for: ${type}`);
+    dataCache[type] = [] as any;
+    console.log(`🔄 Cache COMPLETELY invalidated for: ${type}`);
   } else {
     Object.keys(dataCache.lastUpdate).forEach(key => {
       dataCache.lastUpdate[key as keyof typeof dataCache.lastUpdate] = 0;
+      dataCache[key as keyof typeof dataCache] = [] as any;
     });
-    console.log('🔄 All cache invalidated');
+    console.log('🔄 ALL cache COMPLETELY invalidated');
   }
 };
