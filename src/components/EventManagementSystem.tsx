@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -118,7 +119,7 @@ const EventManagementSystem = React.memo(() => {
         eventos: eventsData.length,
         demandas: demandsData.length,
         crm: crmData.length,
-        notas: notesResult.length
+        notas: notesData.length // Fixed: notesData.length instead of notesResult.length
       });
 
       // Associar demandas aos eventos
