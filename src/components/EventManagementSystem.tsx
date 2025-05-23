@@ -478,7 +478,7 @@ const EventManagementSystem = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen p-[15px] bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 flex items-center justify-center">
+      <div className="min-h-screen w-full px-[15px] py-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-xl font-medium text-[#122A3A]">Carregando...</p>
@@ -488,8 +488,8 @@ const EventManagementSystem = () => {
   }
 
   return (
-    <div className="min-h-screen p-[15px] bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20">
-      <div className="max-w-full mx-auto">
+    <div className="min-h-screen w-full px-[15px] py-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20">
+      <div className="w-full">
         <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-[#467BCA] to-[#77D1A8] inline-block text-transparent bg-clip-text mb-3">Lon Demandas</h1>
