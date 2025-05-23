@@ -1,7 +1,8 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Event, Demand, CRM, Note } from '@/types/event';
 
-// Cache otimizado para evitar múltiplas chamadas
+// Cache otimizado com controle de estado
 let loadingStates = {
   events: false,
   demands: false,
@@ -9,7 +10,7 @@ let loadingStates = {
   notes: false
 };
 
-// Cache de dados para melhor performance
+// Cache de dados
 let dataCache = {
   events: [] as Event[],
   demands: [] as Demand[],
@@ -23,50 +24,99 @@ let dataCache = {
   }
 };
 
-const CACHE_DURATION = 1000; // 1 segundo - reduzido para melhor sincronização
+const CACHE_DURATION = 2000; // 2 segundos
+const REQUEST_TIMEOUT = 10000; // 10 segundos
+const MAX_RETRIES = 3;
 
-// Events - Otimizado para performance
+// Helper para retry com backoff exponencial
+const retryWithBackoff = async <T>(
+  fn: () => Promise<T>,
+  maxRetries: number = MAX_RETRIES,
+  baseDelay: number = 1000
+): Promise<T> => {
+  let lastError: Error;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error as Error;
+      console.warn(`❌ Tentativa ${attempt + 1}/${maxRetries + 1} falhou:`, error);
+      
+      if (attempt < maxRetries) {
+        const delay = baseDelay * Math.pow(2, attempt);
+        console.log(`⏳ Aguardando ${delay}ms antes da próxima tentativa...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+  
+  throw lastError!;
+};
+
+// Helper para criar AbortController com timeout
+const createAbortController = (timeoutMs: number = REQUEST_TIMEOUT) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    controller.abort();
+  }, timeoutMs);
+  
+  return { controller, timeoutId };
+};
+
+// Events - Sistema robusto de carregamento
 export const fetchEvents = async (forceRefresh = false): Promise<Event[]> => {
   const now = Date.now();
   
-  // Usar cache se não forçado e dados são recentes
+  // Usar cache se disponível e não forçado
   if (!forceRefresh && 
       dataCache.events.length > 0 && 
       (now - dataCache.lastUpdate.events) < CACHE_DURATION) {
-    console.log('📦 Using cached events data');
+    console.log('📦 Usando cache de eventos');
     return dataCache.events;
   }
   
+  // Evitar múltiplas requisições simultâneas
   if (loadingStates.events && !forceRefresh) {
-    console.log('⏳ Events already loading, waiting...');
-    await new Promise(resolve => setTimeout(resolve, 100));
+    console.log('⏳ Eventos já carregando, aguardando...');
+    // Aguardar até que o carregamento termine
+    while (loadingStates.events) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
     return dataCache.events;
   }
   
   try {
     loadingStates.events = true;
-    console.log('🔄 Fetching events from database...');
+    console.log('🔄 Carregando eventos da base de dados...');
     
-    // Query otimizada com timeout menor
-    const { data, error } = await supabase
-      .from('events')
-      .select('id, name, date, archived, logo, created_at, updated_at')
-      .order('date', { ascending: true })
-      .abortSignal(AbortSignal.timeout(5000)); // 5 segundos timeout
-    
-    if (error) {
-      console.error('❌ Error fetching events:', error);
-      // Retornar cache em caso de erro se disponível
-      if (dataCache.events.length > 0) {
-        console.log('🔄 Returning cached data due to error');
-        return dataCache.events;
+    const result = await retryWithBackoff(async () => {
+      const { controller, timeoutId } = createAbortController();
+      
+      try {
+        const { data, error } = await supabase
+          .from('events')
+          .select('id, name, date, archived, logo, created_at, updated_at')
+          .order('date', { ascending: true })
+          .abortSignal(controller.signal);
+        
+        clearTimeout(timeoutId);
+        
+        if (error) {
+          console.error('❌ Erro na query de eventos:', error);
+          throw error;
+        }
+        
+        return data || [];
+      } catch (error) {
+        clearTimeout(timeoutId);
+        throw error;
       }
-      throw error;
-    }
+    });
 
-    console.log('✅ Events fetched successfully:', data?.length || 0);
+    console.log('✅ Eventos carregados com sucesso:', result.length);
     
-    const events = (data || []).map((event: any) => ({
+    const events = result.map((event: any) => ({
       ...event,
       date: new Date(event.date),
       demands: [],
@@ -79,13 +129,17 @@ export const fetchEvents = async (forceRefresh = false): Promise<Event[]> => {
     
     return events;
   } catch (error) {
-    console.error('❌ Critical error fetching events:', error);
+    console.error('❌ Erro crítico ao carregar eventos:', error);
+    
     // Retornar cache se disponível
     if (dataCache.events.length > 0) {
-      console.log('🔄 Returning cached data due to critical error');
+      console.log('🔄 Retornando dados em cache devido ao erro');
       return dataCache.events;
     }
-    throw error;
+    
+    // Se não há cache, retornar array vazio para não quebrar a UI
+    console.warn('⚠️ Retornando array vazio - sem cache disponível');
+    return [];
   } finally {
     loadingStates.events = false;
   }
@@ -93,158 +147,186 @@ export const fetchEvents = async (forceRefresh = false): Promise<Event[]> => {
 
 export const createEvent = async (event: Omit<Event, 'id' | 'archived' | 'demands'>): Promise<Event> => {
   try {
-    console.log('🔄 Creating new event:', event.name);
+    console.log('🆕 Criando evento:', event.name);
     
-    // Processar logo se presente
+    // Validar dados antes de enviar
+    if (!event.name || !event.date) {
+      throw new Error('Nome e data são obrigatórios');
+    }
+    
     let logo = event.logo;
-    if (logo && typeof logo === 'string' && logo.length > 1048576) { // 1MB limit
-      console.warn('⚠️ Logo size too large, removing');
+    if (logo && typeof logo === 'string' && logo.length > 1048576) {
+      console.warn('⚠️ Logo muito grande, removendo');
       logo = undefined;
     }
     
-    const { data, error } = await supabase
-      .from('events')
-      .insert({
-        name: event.name.trim(),
-        date: event.date.toISOString(),
-        logo: logo,
-        archived: false
-      })
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('❌ Error creating event:', error);
-      throw error;
-    }
+    const result = await retryWithBackoff(async () => {
+      const { data, error } = await supabase
+        .from('events')
+        .insert({
+          name: event.name.trim(),
+          date: event.date.toISOString(),
+          logo: logo,
+          archived: false
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('❌ Erro ao criar evento:', error);
+        throw error;
+      }
+      
+      return data;
+    });
 
-    console.log('✅ Event created successfully:', data.id);
+    console.log('✅ Evento criado com sucesso:', result.id);
     
     const newEvent = {
-      ...data,
-      date: new Date(data.date),
+      ...result,
+      date: new Date(result.date),
       demands: [],
-      logo: data.logo && data.logo !== 'undefined' ? data.logo : undefined
+      logo: result.logo && result.logo !== 'undefined' ? result.logo : undefined
     };
     
-    // Invalidar cache imediatamente para forçar refresh
-    dataCache.lastUpdate.events = 0;
-    dataCache.events = [];
+    // Invalidar cache completamente
+    invalidateCache('events');
     
     return newEvent;
   } catch (error) {
-    console.error('❌ Create event failed:', error);
+    console.error('❌ Falha ao criar evento:', error);
     throw error;
   }
 };
 
 export const updateEvent = async (id: string, event: Partial<Event>): Promise<void> => {
   try {
-    console.log('🔄 Updating event:', id);
+    console.log('✏️ Atualizando evento:', id);
+    
+    if (!id) {
+      throw new Error('ID do evento é obrigatório');
+    }
+    
     const updates: any = { ...event };
     
-    // Convert Date object to ISO string for database storage
+    // Converter Date para ISO string
     if (updates.date instanceof Date) {
       updates.date = updates.date.toISOString();
     }
     
-    // Remove demands from updates as it's not a database column
+    // Remover demands pois não é coluna da base
     delete updates.demands;
+    delete updates.id; // Não permitir alterar ID
     
-    // Processar logo se presente
+    // Processar logo
     if (updates.logo && typeof updates.logo === 'string' && updates.logo.length > 1048576) {
-      console.warn('⚠️ Logo size too large, removing');
+      console.warn('⚠️ Logo muito grande, removendo');
       updates.logo = null;
     }
     
-    // Trim name if present
+    // Trim name se presente
     if (updates.name) {
       updates.name = updates.name.trim();
     }
     
-    const { error } = await supabase
-      .from('events')
-      .update(updates)
-      .eq('id', id);
-    
-    if (error) {
-      console.error('❌ Error updating event:', error);
-      throw error;
-    }
+    await retryWithBackoff(async () => {
+      const { error } = await supabase
+        .from('events')
+        .update(updates)
+        .eq('id', id);
+      
+      if (error) {
+        console.error('❌ Erro ao atualizar evento:', error);
+        throw error;
+      }
+    });
 
-    console.log('✅ Event updated successfully:', id);
+    console.log('✅ Evento atualizado com sucesso:', id);
     
-    // Invalidar cache imediatamente para forçar refresh
-    dataCache.lastUpdate.events = 0;
-    dataCache.events = [];
+    // Invalidar cache
+    invalidateCache('events');
   } catch (error) {
-    console.error('❌ Update event failed:', error);
+    console.error('❌ Falha ao atualizar evento:', error);
     throw error;
   }
 };
 
 export const deleteEvent = async (id: string): Promise<void> => {
   try {
-    console.log('🔄 Deleting event:', id);
-    const { error } = await supabase
-      .from('events')
-      .delete()
-      .eq('id', id);
+    console.log('🗑️ Deletando evento:', id);
     
-    if (error) {
-      console.error('❌ Error deleting event:', error);
-      throw error;
+    if (!id) {
+      throw new Error('ID do evento é obrigatório');
     }
-
-    console.log('✅ Event deleted successfully:', id);
     
-    // Invalidar cache imediatamente para forçar refresh
-    dataCache.lastUpdate.events = 0;
-    dataCache.events = [];
+    await retryWithBackoff(async () => {
+      const { error } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', id);
+      
+      if (error) {
+        console.error('❌ Erro ao deletar evento:', error);
+        throw error;
+      }
+    });
+
+    console.log('✅ Evento deletado com sucesso:', id);
+    
+    // Invalidar cache
+    invalidateCache('events');
   } catch (error) {
-    console.error('❌ Delete event failed:', error);
+    console.error('❌ Falha ao deletar evento:', error);
     throw error;
   }
 };
 
-// Demands - Mantendo as otimizações existentes
+// Demands - Sistema robusto
 export const fetchDemands = async (forceRefresh = false): Promise<Demand[]> => {
   const now = Date.now();
   
   if (!forceRefresh && 
       dataCache.demands.length > 0 && 
       (now - dataCache.lastUpdate.demands) < CACHE_DURATION) {
-    console.log('📦 Using cached demands data');
+    console.log('📦 Usando cache de demandas');
     return dataCache.demands;
   }
   
   if (loadingStates.demands && !forceRefresh) {
-    console.log('⏳ Demands already loading, waiting...');
-    await new Promise(resolve => setTimeout(resolve, 100));
+    console.log('⏳ Demandas já carregando...');
+    while (loadingStates.demands) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
     return dataCache.demands;
   }
   
   try {
     loadingStates.demands = true;
-    console.log('🔄 Fetching demands from database...');
+    console.log('🔄 Carregando demandas...');
     
-    const { data, error } = await supabase
-      .from('demands')
-      .select('*')
-      .order('date', { ascending: true })
-      .abortSignal(AbortSignal.timeout(5000));
-    
-    if (error) {
-      console.error('❌ Error fetching demands:', error);
-      if (dataCache.demands.length > 0) {
-        return dataCache.demands;
+    const result = await retryWithBackoff(async () => {
+      const { controller, timeoutId } = createAbortController();
+      
+      try {
+        const { data, error } = await supabase
+          .from('demands')
+          .select('*')
+          .order('date', { ascending: true })
+          .abortSignal(controller.signal);
+        
+        clearTimeout(timeoutId);
+        
+        if (error) throw error;
+        return data || [];
+      } catch (error) {
+        clearTimeout(timeoutId);
+        throw error;
       }
-      throw error;
-    }
+    });
 
-    console.log('✅ Demands fetched successfully:', data?.length || 0);
+    console.log('✅ Demandas carregadas:', result.length);
     
-    const demands = (data || []).map((demand: any) => ({
+    const demands = result.map((demand: any) => ({
       id: demand.id,
       eventId: demand.event_id,
       title: demand.title,
@@ -259,11 +341,13 @@ export const fetchDemands = async (forceRefresh = false): Promise<Demand[]> => {
     
     return demands;
   } catch (error) {
-    console.error('❌ Critical error fetching demands:', error);
+    console.error('❌ Erro crítico ao carregar demandas:', error);
+    
     if (dataCache.demands.length > 0) {
       return dataCache.demands;
     }
-    throw error;
+    
+    return [];
   } finally {
     loadingStates.demands = false;
   }
@@ -271,7 +355,7 @@ export const fetchDemands = async (forceRefresh = false): Promise<Demand[]> => {
 
 export const createDemand = async (demand: Omit<Demand, 'id' | 'completed' | 'urgency'>): Promise<Demand> => {
   try {
-    // Calculate urgency
+    // Calcular urgência
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -290,37 +374,37 @@ export const createDemand = async (demand: Omit<Demand, 'id' | 'completed' | 'ur
       urgency = 'tomorrow';
     }
 
-    const { data, error } = await supabase
-      .from('demands')
-      .insert({
-        event_id: demand.eventId,
-        title: demand.title,
-        subject: demand.subject,
-        date: demand.date.toISOString(),
-        urgency,
-      })
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('❌ Error creating demand:', error);
-      throw error;
-    }
+    const result = await retryWithBackoff(async () => {
+      const { data, error } = await supabase
+        .from('demands')
+        .insert({
+          event_id: demand.eventId,
+          title: demand.title,
+          subject: demand.subject,
+          date: demand.date.toISOString(),
+          urgency,
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    });
 
     const newDemand = {
-      id: data.id,
-      eventId: data.event_id,
-      title: data.title,
-      subject: data.subject,
-      date: new Date(data.date),
-      completed: data.completed,
-      urgency: data.urgency as Demand['urgency'],
+      id: result.id,
+      eventId: result.event_id,
+      title: result.title,
+      subject: result.subject,
+      date: new Date(result.date),
+      completed: result.completed,
+      urgency: result.urgency as Demand['urgency'],
     };
     
-    dataCache.lastUpdate.demands = 0;
+    invalidateCache('demands');
     return newDemand;
   } catch (error) {
-    console.error('❌ Create demand failed:', error);
+    console.error('❌ Falha ao criar demanda:', error);
     throw error;
   }
 };
@@ -357,80 +441,86 @@ export const updateDemand = async (id: string, demand: Partial<Demand>): Promise
       updates.date = updates.date.toISOString();
     }
     
-    const { error } = await supabase
-      .from('demands')
-      .update(updates)
-      .eq('id', id);
+    await retryWithBackoff(async () => {
+      const { error } = await supabase
+        .from('demands')
+        .update(updates)
+        .eq('id', id);
+      
+      if (error) throw error;
+    });
     
-    if (error) {
-      console.error('❌ Error updating demand:', error);
-      throw error;
-    }
-    
-    dataCache.lastUpdate.demands = 0;
+    invalidateCache('demands');
   } catch (error) {
-    console.error('❌ Update demand failed:', error);
+    console.error('❌ Falha ao atualizar demanda:', error);
     throw error;
   }
 };
 
 export const deleteDemand = async (id: string): Promise<void> => {
   try {
-    const { error } = await supabase
-      .from('demands')
-      .delete()
-      .eq('id', id);
+    await retryWithBackoff(async () => {
+      const { error } = await supabase
+        .from('demands')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    });
     
-    if (error) {
-      console.error('❌ Error deleting demand:', error);
-      throw error;
-    }
-    
-    dataCache.lastUpdate.demands = 0;
+    invalidateCache('demands');
   } catch (error) {
-    console.error('❌ Delete demand failed:', error);
+    console.error('❌ Falha ao deletar demanda:', error);
     throw error;
   }
 };
 
-// CRM
+// CRM - Sistema robusto
 export const fetchCRMRecords = async (forceRefresh = false): Promise<CRM[]> => {
   const now = Date.now();
   
   if (!forceRefresh && 
       dataCache.crm.length > 0 && 
       (now - dataCache.lastUpdate.crm) < CACHE_DURATION) {
-    console.log('📦 Using cached CRM data');
+    console.log('📦 Usando cache de CRM');
     return dataCache.crm;
   }
   
   if (loadingStates.crm && !forceRefresh) {
-    console.log('⏳ CRM already loading, waiting...');
-    await new Promise(resolve => setTimeout(resolve, 100));
+    console.log('⏳ CRM já carregando...');
+    while (loadingStates.crm) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
     return dataCache.crm;
   }
   
   try {
     loadingStates.crm = true;
-    console.log('🔄 Fetching CRM records from database...');
+    console.log('🔄 Carregando registros CRM...');
     
-    const { data, error } = await supabase
-      .from('crm_records')
-      .select('*')
-      .order('date', { ascending: true })
-      .abortSignal(AbortSignal.timeout(5000));
-    
-    if (error) {
-      console.error('❌ Error fetching CRM records:', error);
-      if (dataCache.crm.length > 0) {
-        return dataCache.crm;
+    const result = await retryWithBackoff(async () => {
+      const { controller, timeoutId } = createAbortController();
+      
+      try {
+        const { data, error } = await supabase
+          .from('crm_records')
+          .select('*')
+          .order('date', { ascending: true })
+          .abortSignal(controller.signal);
+        
+        clearTimeout(timeoutId);
+        
+        if (error) throw error;
+        return data || [];
+      } catch (error) {
+        clearTimeout(timeoutId);
+        throw error;
       }
-      throw error;
-    }
+    });
 
-    console.log('✅ CRM records fetched successfully:', data?.length || 0);
+    console.log('✅ CRM carregado:', result.length);
     
-    const crmRecords = (data || []).map((crm: any) => ({
+    const crmRecords = result.map((crm: any) => ({
       id: crm.id,
       name: crm.name,
       contact: crm.contact,
@@ -447,11 +537,13 @@ export const fetchCRMRecords = async (forceRefresh = false): Promise<CRM[]> => {
     
     return crmRecords;
   } catch (error) {
-    console.error('❌ Critical error fetching CRM:', error);
+    console.error('❌ Erro crítico ao carregar CRM:', error);
+    
     if (dataCache.crm.length > 0) {
       return dataCache.crm;
     }
-    throw error;
+    
+    return [];
   } finally {
     loadingStates.crm = false;
   }
@@ -459,42 +551,42 @@ export const fetchCRMRecords = async (forceRefresh = false): Promise<CRM[]> => {
 
 export const createCRMRecord = async (crm: Omit<CRM, 'id'>): Promise<CRM> => {
   try {
-    const { data, error } = await supabase
-      .from('crm_records')
-      .insert({
-        name: crm.name,
-        contact: crm.contact,
-        email: crm.email,
-        subject: crm.subject,
-        file: crm.file,
-        date: crm.date.toISOString(),
-        completed: crm.completed,
-        status: crm.status,
-      })
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('❌ Error creating CRM record:', error);
-      throw error;
-    }
+    const result = await retryWithBackoff(async () => {
+      const { data, error } = await supabase
+        .from('crm_records')
+        .insert({
+          name: crm.name,
+          contact: crm.contact,
+          email: crm.email,
+          subject: crm.subject,
+          file: crm.file,
+          date: crm.date.toISOString(),
+          completed: crm.completed,
+          status: crm.status,
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    });
 
     const newCRM = {
-      id: data.id,
-      name: data.name,
-      contact: data.contact,
-      email: data.email,
-      subject: data.subject,
-      file: data.file,
-      date: new Date(data.date),
-      completed: data.completed,
-      status: (data.status === 'Inativo' ? 'Inativo' : 'Ativo') as CRM['status'],
+      id: result.id,
+      name: result.name,
+      contact: result.contact,
+      email: result.email,
+      subject: result.subject,
+      file: result.file,
+      date: new Date(result.date),
+      completed: result.completed,
+      status: (result.status === 'Inativo' ? 'Inativo' : 'Ativo') as CRM['status'],
     };
     
-    dataCache.lastUpdate.crm = 0;
+    invalidateCache('crm');
     return newCRM;
   } catch (error) {
-    console.error('❌ Create CRM record failed:', error);
+    console.error('❌ Falha ao criar CRM:', error);
     throw error;
   }
 };
@@ -507,80 +599,86 @@ export const updateCRMRecord = async (id: string, crm: Partial<CRM>): Promise<vo
       updates.date = updates.date.toISOString();
     }
     
-    const { error } = await supabase
-      .from('crm_records')
-      .update(updates)
-      .eq('id', id);
+    await retryWithBackoff(async () => {
+      const { error } = await supabase
+        .from('crm_records')
+        .update(updates)
+        .eq('id', id);
+      
+      if (error) throw error;
+    });
     
-    if (error) {
-      console.error('❌ Error updating CRM record:', error);
-      throw error;
-    }
-    
-    dataCache.lastUpdate.crm = 0;
+    invalidateCache('crm');
   } catch (error) {
-    console.error('❌ Update CRM record failed:', error);
+    console.error('❌ Falha ao atualizar CRM:', error);
     throw error;
   }
 };
 
 export const deleteCRMRecord = async (id: string): Promise<void> => {
   try {
-    const { error } = await supabase
-      .from('crm_records')
-      .delete()
-      .eq('id', id);
+    await retryWithBackoff(async () => {
+      const { error } = await supabase
+        .from('crm_records')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    });
     
-    if (error) {
-      console.error('❌ Error deleting CRM record:', error);
-      throw error;
-    }
-    
-    dataCache.lastUpdate.crm = 0;
+    invalidateCache('crm');
   } catch (error) {
-    console.error('❌ Delete CRM record failed:', error);
+    console.error('❌ Falha ao deletar CRM:', error);
     throw error;
   }
 };
 
-// Notes
+// Notes - Sistema robusto
 export const fetchNotes = async (forceRefresh = false): Promise<Note[]> => {
   const now = Date.now();
   
   if (!forceRefresh && 
       dataCache.notes.length > 0 && 
       (now - dataCache.lastUpdate.notes) < CACHE_DURATION) {
-    console.log('📦 Using cached notes data');
+    console.log('📦 Usando cache de notas');
     return dataCache.notes;
   }
   
   if (loadingStates.notes && !forceRefresh) {
-    console.log('⏳ Notes already loading, waiting...');
-    await new Promise(resolve => setTimeout(resolve, 100));
+    console.log('⏳ Notas já carregando...');
+    while (loadingStates.notes) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
     return dataCache.notes;
   }
   
   try {
     loadingStates.notes = true;
-    console.log('🔄 Fetching notes from database...');
+    console.log('🔄 Carregando notas...');
     
-    const { data, error } = await supabase
-      .from('notes')
-      .select('*')
-      .order('date', { ascending: false })
-      .abortSignal(AbortSignal.timeout(5000));
-    
-    if (error) {
-      console.error('❌ Error fetching notes:', error);
-      if (dataCache.notes.length > 0) {
-        return dataCache.notes;
+    const result = await retryWithBackoff(async () => {
+      const { controller, timeoutId } = createAbortController();
+      
+      try {
+        const { data, error } = await supabase
+          .from('notes')
+          .select('*')
+          .order('date', { ascending: false })
+          .abortSignal(controller.signal);
+        
+        clearTimeout(timeoutId);
+        
+        if (error) throw error;
+        return data || [];
+      } catch (error) {
+        clearTimeout(timeoutId);
+        throw error;
       }
-      throw error;
-    }
+    });
 
-    console.log('✅ Notes fetched successfully:', data?.length || 0);
+    console.log('✅ Notas carregadas:', result.length);
     
-    const notes = (data || []).map((note: any) => ({
+    const notes = result.map((note: any) => ({
       id: note.id,
       title: note.title,
       subject: note.subject,
@@ -593,11 +691,13 @@ export const fetchNotes = async (forceRefresh = false): Promise<Note[]> => {
     
     return notes;
   } catch (error) {
-    console.error('❌ Critical error fetching notes:', error);
+    console.error('❌ Erro crítico ao carregar notas:', error);
+    
     if (dataCache.notes.length > 0) {
       return dataCache.notes;
     }
-    throw error;
+    
+    return [];
   } finally {
     loadingStates.notes = false;
   }
@@ -605,34 +705,34 @@ export const fetchNotes = async (forceRefresh = false): Promise<Note[]> => {
 
 export const createNote = async (note: Omit<Note, 'id'>): Promise<Note> => {
   try {
-    const { data, error } = await supabase
-      .from('notes')
-      .insert({
-        title: note.title,
-        subject: note.subject,
-        date: note.date.toISOString(),
-        author: note.author,
-      })
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('❌ Error creating note:', error);
-      throw error;
-    }
+    const result = await retryWithBackoff(async () => {
+      const { data, error } = await supabase
+        .from('notes')
+        .insert({
+          title: note.title,
+          subject: note.subject,
+          date: note.date.toISOString(),
+          author: note.author,
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    });
 
     const newNote = {
-      id: data.id,
-      title: data.title,
-      subject: data.subject,
-      date: new Date(data.date),
-      author: data.author as 'Thiago' | 'Kalil',
+      id: result.id,
+      title: result.title,
+      subject: result.subject,
+      date: new Date(result.date),
+      author: result.author as 'Thiago' | 'Kalil',
     };
     
-    dataCache.lastUpdate.notes = 0;
+    invalidateCache('notes');
     return newNote;
   } catch (error) {
-    console.error('❌ Create note failed:', error);
+    console.error('❌ Falha ao criar nota:', error);
     throw error;
   }
 };
@@ -645,46 +745,45 @@ export const updateNote = async (id: string, note: Partial<Note>): Promise<void>
       updates.date = updates.date.toISOString();
     }
     
-    const { error } = await supabase
-      .from('notes')
-      .update(updates)
-      .eq('id', id);
+    await retryWithBackoff(async () => {
+      const { error } = await supabase
+        .from('notes')
+        .update(updates)
+        .eq('id', id);
+      
+      if (error) throw error;
+    });
     
-    if (error) {
-      console.error('❌ Error updating note:', error);
-      throw error;
-    }
-    
-    dataCache.lastUpdate.notes = 0;
+    invalidateCache('notes');
   } catch (error) {
-    console.error('❌ Update note failed:', error);
+    console.error('❌ Falha ao atualizar nota:', error);
     throw error;
   }
 };
 
 export const deleteNote = async (id: string): Promise<void> => {
   try {
-    const { error } = await supabase
-      .from('notes')
-      .delete()
-      .eq('id', id);
+    await retryWithBackoff(async () => {
+      const { error } = await supabase
+        .from('notes')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    });
     
-    if (error) {
-      console.error('❌ Error deleting note:', error);
-      throw error;
-    }
-    
-    dataCache.lastUpdate.notes = 0;
+    invalidateCache('notes');
   } catch (error) {
-    console.error('❌ Delete note failed:', error);
+    console.error('❌ Falha ao deletar nota:', error);
     throw error;
   }
 };
 
-// Sistema de Real-time COMPLETAMENTE REFEITO E ULTRA ROBUSTO
+// Sistema de Real-time ULTRA ROBUSTO
 let realtimeCleanup: (() => void) | null = null;
 let realtimeRetryCount = 0;
-const MAX_RETRY_COUNT = 3;
+const MAX_RETRY_COUNT = 5;
+let reconnectTimeout: NodeJS.Timeout | null = null;
 
 export const setupRealtimeSubscriptions = (
   onEventsChange: () => void, 
@@ -692,15 +791,20 @@ export const setupRealtimeSubscriptions = (
   onCRMChange: () => void, 
   onNotesChange: () => void
 ) => {
-  // Limpar subscriptions existentes
+  // Limpar subscriptions e timeouts existentes
   if (realtimeCleanup) {
-    console.log('🧹 Cleaning up existing realtime subscriptions...');
+    console.log('🧹 Limpando subscriptions existentes...');
     realtimeCleanup();
   }
   
-  console.log('🔌 Setting up ULTRA ROBUST real-time subscriptions...');
+  if (reconnectTimeout) {
+    clearTimeout(reconnectTimeout);
+    reconnectTimeout = null;
+  }
   
-  // Debounce AGRESSIVO para evitar spam
+  console.log('🔌 Configurando subscriptions ULTRA ROBUSTAS...');
+  
+  // Debounce robusto para evitar spam
   const createDebouncedHandler = (fn: Function, delay: number, name: string) => {
     let timeoutId: NodeJS.Timeout;
     let lastCall = 0;
@@ -709,53 +813,44 @@ export const setupRealtimeSubscriptions = (
       const now = Date.now();
       
       // Evitar chamadas muito frequentes
-      if (now - lastCall < 200) {
-        console.log(`⚡ ${name} change debounced (too frequent)`);
+      if (now - lastCall < 500) {
+        console.log(`⚡ ${name} mudança muito frequente, ignorando`);
         return;
       }
       
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
-        console.log(`🔥 ${name} REALTIME UPDATE TRIGGERED`);
+        console.log(`🔥 ${name} ATUALIZAÇÃO REAL-TIME EXECUTADA`);
         lastCall = Date.now();
+        
+        // Invalidar cache COMPLETAMENTE antes de chamar handler
+        invalidateCache();
         fn.apply(null, args);
       }, delay);
     };
   };
   
   const debouncedEventsChange = createDebouncedHandler(async () => {
-    console.log('🔥🔥🔥 EVENTS REALTIME SYNC STARTING...');
-    // FORÇAR invalidação total do cache
-    dataCache.lastUpdate.events = 0;
-    dataCache.events = [];
+    console.log('🔥🔥🔥 EVENTOS SINCRONIZAÇÃO REAL-TIME');
     onEventsChange();
-  }, 100, 'EVENTS');
+  }, 300, 'EVENTOS');
   
   const debouncedDemandsChange = createDebouncedHandler(async () => {
-    console.log('🔥🔥🔥 DEMANDS REALTIME SYNC STARTING...');
-    // FORÇAR invalidação total do cache
-    dataCache.lastUpdate.demands = 0;
-    dataCache.demands = [];
+    console.log('🔥🔥🔥 DEMANDAS SINCRONIZAÇÃO REAL-TIME');
     onDemandsChange();
-  }, 100, 'DEMANDS');
+  }, 300, 'DEMANDAS');
   
   const debouncedCRMChange = createDebouncedHandler(async () => {
-    console.log('🔥🔥🔥 CRM REALTIME SYNC STARTING...');
-    // FORÇAR invalidação total do cache
-    dataCache.lastUpdate.crm = 0;
-    dataCache.crm = [];
+    console.log('🔥🔥🔥 CRM SINCRONIZAÇÃO REAL-TIME');
     onCRMChange();
-  }, 100, 'CRM');
+  }, 300, 'CRM');
   
   const debouncedNotesChange = createDebouncedHandler(async () => {
-    console.log('🔥🔥🔥 NOTES REALTIME SYNC STARTING...');
-    // FORÇAR invalidação total do cache
-    dataCache.lastUpdate.notes = 0;
-    dataCache.notes = [];
+    console.log('🔥🔥🔥 NOTAS SINCRONIZAÇÃO REAL-TIME');
     onNotesChange();
-  }, 100, 'NOTES');
+  }, 300, 'NOTAS');
   
-  // Função para reconectar em caso de erro
+  // Função para reconectar com estratégia robusta
   const setupChannelWithRetry = (channelName: string, tableName: string, handler: Function) => {
     const channel = supabase
       .channel(channelName)
@@ -771,31 +866,41 @@ export const setupRealtimeSubscriptions = (
             payload.new.id : 
             (payload.old && typeof payload.old === 'object' && 'id' in payload.old) ? 
               payload.old.id : 
-              'unknown';
+              'desconhecido';
           
-          console.log(`🔥🔥🔥 REAL-TIME ${tableName.toUpperCase()} DETECTED:`, payload.eventType, recordId);
+          console.log(`🔥 REAL-TIME ${tableName.toUpperCase()} DETECTADO:`, payload.eventType, recordId);
           handler();
         }
       )
       .subscribe((status) => {
-        console.log(`📡 ${tableName.toUpperCase()} channel status:`, status);
+        console.log(`📡 ${tableName.toUpperCase()} status:`, status);
         
         if (status === 'SUBSCRIBED') {
-          console.log(`✅ ${tableName.toUpperCase()}: Real-time sync ACTIVE 🚀`);
-          realtimeRetryCount = 0; // Reset retry count on success
+          console.log(`✅ ${tableName.toUpperCase()}: Sincronização ATIVA 🚀`);
+          realtimeRetryCount = 0; // Reset contador de tentativas
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-          console.error(`❌ ${tableName.toUpperCase()}: Real-time sync FAILED:`, status);
+          console.error(`❌ ${tableName.toUpperCase()}: Sincronização FALHOU:`, status);
           
-          // Retry logic
+          // Lógica de reconexão
           if (realtimeRetryCount < MAX_RETRY_COUNT) {
             realtimeRetryCount++;
-            console.log(`🔄 Retrying ${tableName} subscription (${realtimeRetryCount}/${MAX_RETRY_COUNT})...`);
-            setTimeout(() => {
+            const delay = Math.min(1000 * Math.pow(2, realtimeRetryCount), 30000); // Max 30s
+            console.log(`🔄 Reconectando ${tableName} (${realtimeRetryCount}/${MAX_RETRY_COUNT}) em ${delay}ms...`);
+            
+            reconnectTimeout = setTimeout(() => {
+              console.log(`🔄 Executando reconexão para ${tableName}...`);
               supabase.removeChannel(channel);
               setupChannelWithRetry(channelName, tableName, handler);
-            }, 1000 * realtimeRetryCount); // Exponential backoff reduzido
+            }, delay);
           } else {
-            console.error(`💀 ${tableName.toUpperCase()}: Max retries reached. Real-time disabled for this table.`);
+            console.error(`💀 ${tableName.toUpperCase()}: Máximo de tentativas atingido. Real-time desabilitado.`);
+            
+            // Tentar reconectar após um tempo maior
+            reconnectTimeout = setTimeout(() => {
+              console.log(`🔄 Tentativa de reconexão após cooldown para ${tableName}...`);
+              realtimeRetryCount = 0;
+              setupChannelWithRetry(channelName, tableName, handler);
+            }, 60000); // 1 minuto
           }
         }
       });
@@ -803,46 +908,61 @@ export const setupRealtimeSubscriptions = (
     return channel;
   };
 
-  // Events channel - CRÍTICO para sincronização
-  const eventsChannel = setupChannelWithRetry('realtime:events', 'events', debouncedEventsChange);
+  // Criar channels para todas as tabelas
+  const eventsChannel = setupChannelWithRetry('realtime:events-ultra', 'events', debouncedEventsChange);
+  const demandsChannel = setupChannelWithRetry('realtime:demands-ultra', 'demands', debouncedDemandsChange);
+  const crmChannel = setupChannelWithRetry('realtime:crm-ultra', 'crm_records', debouncedCRMChange);
+  const notesChannel = setupChannelWithRetry('realtime:notes-ultra', 'notes', debouncedNotesChange);
 
-  // Demands channel
-  const demandsChannel = setupChannelWithRetry('realtime:demands', 'demands', debouncedDemandsChange);
-
-  // CRM channel
-  const crmChannel = setupChannelWithRetry('realtime:crm_records', 'crm_records', debouncedCRMChange);
-
-  // Notes channel
-  const notesChannel = setupChannelWithRetry('realtime:notes', 'notes', debouncedNotesChange);
-
-  // Return cleanup function
+  // Função de limpeza
   realtimeCleanup = () => {
-    console.log('🧹 Cleaning up ALL real-time subscriptions...');
+    console.log('🧹 Limpando TODAS as subscriptions real-time...');
     try {
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
+        reconnectTimeout = null;
+      }
+      
       supabase.removeChannel(eventsChannel);
       supabase.removeChannel(demandsChannel);
       supabase.removeChannel(crmChannel);
       supabase.removeChannel(notesChannel);
-      console.log('✅ All real-time channels cleaned up successfully');
+      
+      console.log('✅ Todas as subscriptions limpas com sucesso');
     } catch (error) {
-      console.error('❌ Error cleaning up channels:', error);
+      console.error('❌ Erro ao limpar subscriptions:', error);
     }
   };
   
   return realtimeCleanup;
 };
 
-// Função para invalidar cache manualmente se necessário
+// Função para invalidar cache manualmente
 export const invalidateCache = (type?: 'events' | 'demands' | 'crm' | 'notes') => {
   if (type) {
     dataCache.lastUpdate[type] = 0;
     dataCache[type] = [] as any;
-    console.log(`🔄 Cache COMPLETELY invalidated for: ${type}`);
+    console.log(`🔄 Cache INVALIDADO para: ${type}`);
   } else {
     Object.keys(dataCache.lastUpdate).forEach(key => {
       dataCache.lastUpdate[key as keyof typeof dataCache.lastUpdate] = 0;
       dataCache[key as keyof typeof dataCache] = [] as any;
     });
-    console.log('🔄 ALL cache COMPLETELY invalidated');
+    console.log('🔄 TODO o cache INVALIDADO');
+  }
+};
+
+// Função para verificar conectividade
+export const checkConnectivity = async (): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase
+      .from('events')
+      .select('id')
+      .limit(1);
+    
+    return !error;
+  } catch (error) {
+    console.error('❌ Falha no teste de conectividade:', error);
+    return false;
   }
 };
