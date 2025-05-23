@@ -14,6 +14,8 @@ const EventManagementSystem = () => {
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
 
+  console.log('EventManagementSystem rendering with events:', events);
+
   const handleCreateEvent = (eventData: Omit<Event, 'id' | 'archived' | 'demands'>) => {
     const newEvent: Event = {
       ...eventData,
@@ -21,6 +23,7 @@ const EventManagementSystem = () => {
       archived: false,
       demands: []
     };
+    console.log('Creating new event:', newEvent);
     setEvents(prev => [...prev, newEvent]);
     setIsEventModalOpen(false);
   };
@@ -58,16 +61,25 @@ const EventManagementSystem = () => {
   };
 
   const handleAddDemand = (eventId: string, demandData: Omit<Demand, 'id' | 'eventId' | 'completed' | 'urgency'>) => {
+    console.log('Adding demand to event:', eventId, demandData);
+    
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     
     let urgency: Demand['urgency'] = 'future';
     const demandDate = new Date(demandData.date);
+    demandDate.setHours(0, 0, 0, 0);
     
-    if (demandDate < today) urgency = 'overdue';
-    else if (demandDate.toDateString() === today.toDateString()) urgency = 'today';
-    else if (demandDate.toDateString() === tomorrow.toDateString()) urgency = 'tomorrow';
+    if (demandDate < today) {
+      urgency = 'overdue';
+    } else if (demandDate.getTime() === today.getTime()) {
+      urgency = 'today';
+    } else if (demandDate.getTime() === tomorrow.getTime()) {
+      urgency = 'tomorrow';
+    }
 
     const newDemand: Demand = {
       ...demandData,
@@ -77,6 +89,8 @@ const EventManagementSystem = () => {
       urgency
     };
 
+    console.log('New demand created:', newDemand);
+
     setEvents(prev => prev.map(event => 
       event.id === eventId 
         ? { ...event, demands: [...event.demands, newDemand] }
@@ -85,6 +99,8 @@ const EventManagementSystem = () => {
   };
 
   const handleUpdateDemand = (eventId: string, demandId: string, demandData: Partial<Demand>) => {
+    console.log('Updating demand:', eventId, demandId, demandData);
+    
     setEvents(prev => prev.map(event => 
       event.id === eventId 
         ? {
@@ -100,6 +116,8 @@ const EventManagementSystem = () => {
   };
 
   const handleDeleteDemand = (eventId: string, demandId: string) => {
+    console.log('Deleting demand:', eventId, demandId);
+    
     setEvents(prev => prev.map(event => 
       event.id === eventId 
         ? {
@@ -116,13 +134,17 @@ const EventManagementSystem = () => {
     event.demands.filter(demand => demand.completed)
   );
 
+  console.log('Active events:', activeEvents);
+  console.log('Archived events:', archivedEvents);
+  console.log('Completed demands:', completedDemands);
+
   return (
-    <div className="min-h-screen p-3 sm:p-5 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20">
+    <div className="min-h-screen p-4 sm:p-6 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20">
       <div className="max-w-7xl mx-auto">
-        <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <header className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-[#467BCA] to-[#77D1A8] inline-block text-transparent bg-clip-text mb-2">Lon Demandas</h1>
-            <p className="text-[#122A3A]/70 text-sm">Organize seus eventos e demandas de forma visual e intuitiva</p>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-[#467BCA] to-[#77D1A8] inline-block text-transparent bg-clip-text mb-3">Lon Demandas</h1>
+            <p className="text-[#122A3A]/70 text-lg">Organize seus eventos e demandas de forma visual e intuitiva</p>
           </div>
           
           <Button 
@@ -130,30 +152,30 @@ const EventManagementSystem = () => {
               setEditingEvent(null);
               setIsEventModalOpen(true);
             }}
-            className="bg-gradient-to-r from-[#467BCA] to-[#77D1A8] hover:opacity-90 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg"
+            className="bg-gradient-to-r from-[#467BCA] to-[#77D1A8] hover:opacity-90 text-white px-6 py-3 rounded-xl flex items-center gap-3 transition-all duration-200 shadow-lg hover:shadow-xl text-lg font-medium"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-5 h-5" />
             Novo Evento
           </Button>
         </header>
 
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabType)} className="space-y-6">
-          <div className="flex justify-end mb-5">
-            <TabsList className="bg-white border border-gray-100 rounded-xl shadow-sm">
-              <TabsTrigger value="demands" className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA]/10 data-[state=active]:to-[#77D1A8]/10 data-[state=active]:text-[#122A3A] rounded-lg px-4 py-2">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabType)} className="space-y-8">
+          <div className="flex justify-end mb-6">
+            <TabsList className="bg-white border border-gray-200 rounded-xl shadow-md p-1">
+              <TabsTrigger value="demands" className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA]/10 data-[state=active]:to-[#77D1A8]/10 data-[state=active]:text-[#122A3A] rounded-lg px-5 py-3">
                 Início ({activeEvents.length})
               </TabsTrigger>
-              <TabsTrigger value="archived" className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA]/10 data-[state=active]:to-[#77D1A8]/10 data-[state=active]:text-[#122A3A] rounded-lg px-4 py-2">
+              <TabsTrigger value="archived" className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA]/10 data-[state=active]:to-[#77D1A8]/10 data-[state=active]:text-[#122A3A] rounded-lg px-5 py-3">
                 Arquivadas ({archivedEvents.length})
               </TabsTrigger>
-              <TabsTrigger value="completed" className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA]/10 data-[state=active]:to-[#77D1A8]/10 data-[state=active]:text-[#122A3A] rounded-lg px-4 py-2">
+              <TabsTrigger value="completed" className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA]/10 data-[state=active]:to-[#77D1A8]/10 data-[state=active]:text-[#122A3A] rounded-lg px-5 py-3">
                 Concluídas ({completedDemands.length})
               </TabsTrigger>
             </TabsList>
           </div>
 
-          <TabsContent value="demands" className="space-y-4">
-            <div className="space-y-4">
+          <TabsContent value="demands" className="space-y-6">
+            <div className="space-y-6">
               {activeEvents.map(event => (
                 <EventRow
                   key={event.id}
@@ -171,10 +193,10 @@ const EventManagementSystem = () => {
               ))}
               
               {activeEvents.length === 0 && (
-                <div className="text-center py-16 bg-white rounded-xl border border-gray-100 shadow-sm">
-                  <div className="text-5xl mb-4">📅</div>
-                  <p className="text-lg font-medium text-[#122A3A] mb-2">Nenhum evento criado ainda</p>
-                  <p className="text-sm text-[#122A3A]/70">Clique em "Novo Evento" para começar</p>
+                <div className="text-center py-20 bg-white rounded-xl border border-gray-200 shadow-md">
+                  <div className="text-6xl mb-6">📅</div>
+                  <p className="text-xl font-medium text-[#122A3A] mb-3">Nenhum evento criado ainda</p>
+                  <p className="text-lg text-[#122A3A]/70">Clique em "Novo Evento" para começar</p>
                 </div>
               )}
             </div>
