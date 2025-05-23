@@ -88,8 +88,13 @@ export const fetchDemands = async (): Promise<Demand[]> => {
   }
 
   return data.map((demand: any) => ({
-    ...demand,
+    id: demand.id,
+    eventId: demand.event_id, // Map event_id to eventId
+    title: demand.title,
+    subject: demand.subject,
     date: new Date(demand.date),
+    completed: demand.completed,
+    urgency: demand.urgency,
   }));
 };
 
@@ -131,13 +136,24 @@ export const createDemand = async (demand: Omit<Demand, 'id' | 'completed' | 'ur
   }
 
   return {
-    ...data,
+    id: data.id,
+    eventId: data.event_id, // Map event_id to eventId
+    title: data.title,
+    subject: data.subject,
     date: new Date(data.date),
+    completed: data.completed,
+    urgency: data.urgency,
   };
 };
 
 export const updateDemand = async (id: string, demand: Partial<Demand>): Promise<void> => {
   const updates: any = { ...demand };
+  
+  // Map eventId to event_id for database
+  if (updates.eventId) {
+    updates.event_id = updates.eventId;
+    delete updates.eventId;
+  }
   
   // Convert Date object to ISO string for database storage
   if (updates.date instanceof Date) {
@@ -275,8 +291,11 @@ export const fetchNotes = async (): Promise<Note[]> => {
   }
 
   return data.map((note: any) => ({
-    ...note,
+    id: note.id,
+    title: note.title,
+    subject: note.subject,
     date: new Date(note.date),
+    author: note.author as 'Thiago' | 'Kalil', // Type assertion for author
   }));
 };
 
@@ -298,8 +317,11 @@ export const createNote = async (note: Omit<Note, 'id'>): Promise<Note> => {
   }
 
   return {
-    ...data,
+    id: data.id,
+    title: data.title,
+    subject: data.subject,
     date: new Date(data.date),
+    author: data.author as 'Thiago' | 'Kalil', // Type assertion for author
   };
 };
 
