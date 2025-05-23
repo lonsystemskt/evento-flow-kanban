@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -60,8 +59,8 @@ const EventManagementSystem = () => {
       } catch (error) {
         console.error('Error loading data:', error);
         toast({
-          title: "Error",
-          description: "Failed to load data. Please try again.",
+          title: "Erro",
+          description: "Falha ao carregar dados. Tente novamente.",
           variant: "destructive"
         });
       } finally {
@@ -143,14 +142,14 @@ const EventManagementSystem = () => {
       setEvents(prev => [...prev, { ...newEvent, demands: [] }]);
       setIsEventModalOpen(false);
       toast({
-        title: "Success",
-        description: "Event created successfully",
+        title: "Sucesso",
+        description: "Evento criado com sucesso",
       });
     } catch (error) {
       console.error('Error creating event:', error);
       toast({
-        title: "Error",
-        description: "Failed to create event. Please try again.",
+        title: "Erro",
+        description: "Falha ao criar evento. Tente novamente.",
         variant: "destructive"
       });
     }
@@ -171,14 +170,14 @@ const EventManagementSystem = () => {
       setEditingEvent(null);
       setIsEventModalOpen(false);
       toast({
-        title: "Success",
-        description: "Event updated successfully",
+        title: "Sucesso",
+        description: "Evento atualizado com sucesso",
       });
     } catch (error) {
       console.error('Error editing event:', error);
       toast({
-        title: "Error",
-        description: "Failed to update event. Please try again.",
+        title: "Erro",
+        description: "Falha ao atualizar evento. Tente novamente.",
         variant: "destructive"
       });
     }
@@ -195,14 +194,14 @@ const EventManagementSystem = () => {
       ));
       
       toast({
-        title: "Success",
-        description: "Event archived successfully",
+        title: "Sucesso",
+        description: "Evento arquivado com sucesso",
       });
     } catch (error) {
       console.error('Error archiving event:', error);
       toast({
-        title: "Error",
-        description: "Failed to archive event. Please try again.",
+        title: "Erro",
+        description: "Falha ao arquivar evento. Tente novamente.",
         variant: "destructive"
       });
     }
@@ -213,14 +212,14 @@ const EventManagementSystem = () => {
       await deleteEvent(eventId);
       setEvents(prev => prev.filter(event => event.id !== eventId));
       toast({
-        title: "Success",
-        description: "Event deleted successfully",
+        title: "Sucesso",
+        description: "Evento excluído com sucesso",
       });
     } catch (error) {
       console.error('Error deleting event:', error);
       toast({
-        title: "Error",
-        description: "Failed to delete event. Please try again.",
+        title: "Erro",
+        description: "Falha ao excluir evento. Tente novamente.",
         variant: "destructive"
       });
     }
@@ -237,14 +236,14 @@ const EventManagementSystem = () => {
       ));
       
       toast({
-        title: "Success",
-        description: "Event restored successfully",
+        title: "Sucesso",
+        description: "Evento restaurado com sucesso",
       });
     } catch (error) {
       console.error('Error restoring event:', error);
       toast({
-        title: "Error",
-        description: "Failed to restore event. Please try again.",
+        title: "Erro",
+        description: "Falha ao restaurar evento. Tente novamente.",
         variant: "destructive"
       });
     }
@@ -261,14 +260,14 @@ const EventManagementSystem = () => {
       ));
       
       toast({
-        title: "Success",
-        description: "Demand added successfully",
+        title: "Sucesso",
+        description: "Demanda adicionada com sucesso",
       });
     } catch (error) {
       console.error('Error adding demand:', error);
       toast({
-        title: "Error",
-        description: "Failed to add demand. Please try again.",
+        title: "Erro",
+        description: "Falha ao adicionar demanda. Tente novamente.",
         variant: "destructive"
       });
     }
@@ -299,14 +298,14 @@ const EventManagementSystem = () => {
       setEvents(updatedEvents);
       
       toast({
-        title: "Success",
-        description: "Demand updated successfully",
+        title: "Sucesso",
+        description: "Demanda atualizada com sucesso",
       });
     } catch (error) {
       console.error('Error updating demand:', error);
       toast({
-        title: "Error",
-        description: "Failed to update demand. Please try again.",
+        title: "Erro",
+        description: "Falha ao atualizar demanda. Tente novamente.",
         variant: "destructive"
       });
     }
@@ -326,14 +325,14 @@ const EventManagementSystem = () => {
       ));
       
       toast({
-        title: "Success",
-        description: "Demand deleted successfully",
+        title: "Sucesso",
+        description: "Demanda excluída com sucesso",
       });
     } catch (error) {
       console.error('Error deleting demand:', error);
       toast({
-        title: "Error",
-        description: "Failed to delete demand. Please try again.",
+        title: "Erro",
+        description: "Falha ao excluir demanda. Tente novamente.",
         variant: "destructive"
       });
     }
@@ -358,14 +357,14 @@ const EventManagementSystem = () => {
       const newCRM = await createCRMRecord(crmData);
       setCrmRecords(prev => [...prev, newCRM]);
       toast({
-        title: "Success",
-        description: "CRM record added successfully",
+        title: "Sucesso",
+        description: "Registro CRM adicionado com sucesso",
       });
     } catch (error) {
       console.error('Error adding CRM record:', error);
       toast({
-        title: "Error",
-        description: "Failed to add CRM record. Please try again.",
+        title: "Erro",
+        description: "Falha ao adicionar registro CRM. Tente novamente.",
         variant: "destructive"
       });
     }
@@ -380,14 +379,14 @@ const EventManagementSystem = () => {
       ));
       
       toast({
-        title: "Success",
-        description: "CRM record updated successfully",
+        title: "Sucesso",
+        description: "Registro CRM atualizado com sucesso",
       });
     } catch (error) {
       console.error('Error updating CRM record:', error);
       toast({
-        title: "Error",
-        description: "Failed to update CRM record. Please try again.",
+        title: "Erro",
+        description: "Falha ao atualizar registro CRM. Tente novamente.",
         variant: "destructive"
       });
     }
@@ -398,14 +397,14 @@ const EventManagementSystem = () => {
       await deleteCRMRecord(id);
       setCrmRecords(prev => prev.filter(crm => crm.id !== id));
       toast({
-        title: "Success",
-        description: "CRM record deleted successfully",
+        title: "Sucesso",
+        description: "Registro CRM excluído com sucesso",
       });
     } catch (error) {
       console.error('Error deleting CRM record:', error);
       toast({
-        title: "Error",
-        description: "Failed to delete CRM record. Please try again.",
+        title: "Erro",
+        description: "Falha ao excluir registro CRM. Tente novamente.",
         variant: "destructive"
       });
     }
@@ -417,14 +416,14 @@ const EventManagementSystem = () => {
       const newNote = await createNote(noteData);
       setNotes(prev => [...prev, newNote]);
       toast({
-        title: "Success",
-        description: "Note added successfully",
+        title: "Sucesso",
+        description: "Anotação adicionada com sucesso",
       });
     } catch (error) {
       console.error('Error adding note:', error);
       toast({
-        title: "Error",
-        description: "Failed to add note. Please try again.",
+        title: "Erro",
+        description: "Falha ao adicionar anotação. Tente novamente.",
         variant: "destructive"
       });
     }
@@ -439,14 +438,14 @@ const EventManagementSystem = () => {
       ));
       
       toast({
-        title: "Success",
-        description: "Note updated successfully",
+        title: "Sucesso",
+        description: "Anotação atualizada com sucesso",
       });
     } catch (error) {
       console.error('Error updating note:', error);
       toast({
-        title: "Error",
-        description: "Failed to update note. Please try again.",
+        title: "Erro",
+        description: "Falha ao atualizar anotação. Tente novamente.",
         variant: "destructive"
       });
     }
@@ -457,14 +456,14 @@ const EventManagementSystem = () => {
       await deleteNote(id);
       setNotes(prev => prev.filter(note => note.id !== id));
       toast({
-        title: "Success",
-        description: "Note deleted successfully",
+        title: "Sucesso",
+        description: "Anotação excluída com sucesso",
       });
     } catch (error) {
       console.error('Error deleting note:', error);
       toast({
-        title: "Error",
-        description: "Failed to delete note. Please try again.",
+        title: "Erro",
+        description: "Falha ao excluir anotação. Tente novamente.",
         variant: "destructive"
       });
     }
@@ -478,22 +477,22 @@ const EventManagementSystem = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen w-full pl-[30px] pr-[30px] pt-[25px] pb-0 bg-[#F6F7FB] flex items-center justify-center">
+      <div className="min-h-screen w-full pl-[30px] pr-[30px] pt-[25px] pb-0 bg-[#E4E9EF] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-xl font-medium text-[#122A3A]">Carregando...</p>
+          <p className="text-xl font-medium text-[#2E3A59]">Carregando...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen w-full pl-[30px] pr-[30px] pt-[25px] pb-0 bg-[#F6F7FB]">
+    <div className="min-h-screen w-full pl-[30px] pr-[30px] pt-[25px] pb-0 bg-[#E4E9EF]">
       <div className="w-full">
         <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="text-left">
             <h1 className="text-4xl font-bold bg-gradient-to-r from-[#467BCA] to-[#77D1A8] inline-block text-transparent bg-clip-text mb-3">Lon Demandas</h1>
-            <p className="text-[#122A3A]/70 text-base">{getCurrentDateTime()}</p>
+            <p className="text-[#2E3A59]/70 text-base">{getCurrentDateTime()}</p>
           </div>
           
           <Button 
@@ -510,23 +509,41 @@ const EventManagementSystem = () => {
 
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabType)} className="space-y-6">
           <div className="flex justify-end mb-4">
-            <TabsList className="bg-white border border-gray-200 rounded-xl p-1">
-              <TabsTrigger value="demands" className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA]/10 data-[state=active]:to-[#77D1A8]/10 data-[state=active]:text-[#122A3A] rounded-lg px-5 py-3">
+            <TabsList className="bg-white border-none rounded-2xl p-1.5 gap-1">
+              <TabsTrigger 
+                value="demands" 
+                className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA] data-[state=active]:to-[#77D1A8] data-[state=active]:text-white data-[state=inactive]:text-[#2E3A59] data-[state=inactive]:hover:text-[#467BCA] rounded-xl px-6 py-3 transition-all duration-300"
+              >
                 Demandas ({activeEvents.length})
               </TabsTrigger>
-              <TabsTrigger value="overview" className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA]/10 data-[state=active]:to-[#77D1A8]/10 data-[state=active]:text-[#122A3A] rounded-lg px-5 py-3">
+              <TabsTrigger 
+                value="overview" 
+                className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA] data-[state=active]:to-[#77D1A8] data-[state=active]:text-white data-[state=inactive]:text-[#2E3A59] data-[state=inactive]:hover:text-[#467BCA] rounded-xl px-6 py-3 transition-all duration-300"
+              >
                 Visão Geral
               </TabsTrigger>
-              <TabsTrigger value="crm" className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA]/10 data-[state=active]:to-[#77D1A8]/10 data-[state=active]:text-[#122A3A] rounded-lg px-5 py-3">
+              <TabsTrigger 
+                value="crm" 
+                className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA] data-[state=active]:to-[#77D1A8] data-[state=active]:text-white data-[state=inactive]:text-[#2E3A59] data-[state=inactive]:hover:text-[#467BCA] rounded-xl px-6 py-3 transition-all duration-300"
+              >
                 CRM ({crmRecords.length})
               </TabsTrigger>
-              <TabsTrigger value="notes" className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA]/10 data-[state=active]:to-[#77D1A8]/10 data-[state=active]:text-[#122A3A] rounded-lg px-5 py-3">
+              <TabsTrigger 
+                value="notes" 
+                className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA] data-[state=active]:to-[#77D1A8] data-[state=active]:text-white data-[state=inactive]:text-[#2E3A59] data-[state=inactive]:hover:text-[#467BCA] rounded-xl px-6 py-3 transition-all duration-300"
+              >
                 Anotações ({notes.length})
               </TabsTrigger>
-              <TabsTrigger value="archived" className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA]/10 data-[state=active]:to-[#77D1A8]/10 data-[state=active]:text-[#122A3A] rounded-lg px-5 py-3">
+              <TabsTrigger 
+                value="archived" 
+                className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA] data-[state=active]:to-[#77D1A8] data-[state=active]:text-white data-[state=inactive]:text-[#2E3A59] data-[state=inactive]:hover:text-[#467BCA] rounded-xl px-6 py-3 transition-all duration-300"
+              >
                 Arquivadas ({archivedEvents.length})
               </TabsTrigger>
-              <TabsTrigger value="completed" className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA]/10 data-[state=active]:to-[#77D1A8]/10 data-[state=active]:text-[#122A3A] rounded-lg px-5 py-3">
+              <TabsTrigger 
+                value="completed" 
+                className="text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#467BCA] data-[state=active]:to-[#77D1A8] data-[state=active]:text-white data-[state=inactive]:text-[#2E3A59] data-[state=inactive]:hover:text-[#467BCA] rounded-xl px-6 py-3 transition-all duration-300"
+              >
                 Concluídas ({completedDemands.length})
               </TabsTrigger>
             </TabsList>
@@ -551,10 +568,10 @@ const EventManagementSystem = () => {
               ))}
               
               {activeEvents.length === 0 && (
-                <div className="text-center py-20 bg-white rounded-xl border border-gray-200">
+                <div className="text-center py-20 bg-[#F6F7FB] rounded-xl border border-[rgba(0,0,0,0.05)]">
                   <div className="text-6xl mb-6">📅</div>
-                  <p className="text-xl font-medium text-[#122A3A] mb-3">Nenhum evento criado ainda</p>
-                  <p className="text-base text-[#122A3A]/70">Clique em "Novo Evento" para começar</p>
+                  <p className="text-xl font-medium text-[#2E3A59] mb-3">Nenhum evento criado ainda</p>
+                  <p className="text-base text-[#2E3A59]/70">Clique em "Novo Evento" para começar</p>
                 </div>
               )}
             </div>
@@ -589,18 +606,18 @@ const EventManagementSystem = () => {
           <TabsContent value="archived">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {archivedEvents.map(event => (
-                <div key={event.id} className="bg-white p-4 rounded-xl border border-gray-100 flex items-center justify-between transition-all duration-200">
+                <div key={event.id} className="bg-[#F6F7FB] p-4 rounded-xl border border-[rgba(0,0,0,0.05)] flex items-center justify-between transition-all duration-200">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
                       {event.logo ? (
                         <img src={event.logo} alt={event.name} className="w-10 h-10 rounded-full object-cover" />
                       ) : (
-                        <span className="text-[#122A3A] font-medium text-sm">{event.name.charAt(0)}</span>
+                        <span className="text-[#2E3A59] font-medium text-sm">{event.name.charAt(0)}</span>
                       )}
                     </div>
                     <div>
-                      <h3 className="font-medium text-[#122A3A] text-base">{event.name}</h3>
-                      <p className="text-xs text-[#122A3A]/60">{event.date.toLocaleDateString('pt-BR')}</p>
+                      <h3 className="font-medium text-[#2E3A59] text-base">{event.name}</h3>
+                      <p className="text-xs text-[#2E3A59]/60">{event.date.toLocaleDateString('pt-BR')}</p>
                     </div>
                   </div>
                   <Button 
@@ -613,9 +630,9 @@ const EventManagementSystem = () => {
               ))}
               
               {archivedEvents.length === 0 && (
-                <div className="col-span-full text-center py-16 bg-white rounded-xl border border-gray-100">
+                <div className="col-span-full text-center py-16 bg-[#F6F7FB] rounded-xl border border-[rgba(0,0,0,0.05)]">
                   <div className="text-5xl mb-4">📦</div>
-                  <p className="text-base font-medium text-[#122A3A]">Nenhum evento arquivado</p>
+                  <p className="text-base font-medium text-[#2E3A59]">Nenhum evento arquivado</p>
                 </div>
               )}
             </div>
@@ -626,14 +643,14 @@ const EventManagementSystem = () => {
               {completedDemands.map(demand => {
                 const event = events.find(e => e.id === demand.eventId);
                 return (
-                  <div key={demand.id} className="bg-white p-4 rounded-xl border border-gray-100 transition-all duration-200">
+                  <div key={demand.id} className="bg-[#F6F7FB] p-4 rounded-xl border border-[rgba(0,0,0,0.05)] transition-all duration-200">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-bold text-[#122A3A] text-sm">{demand.title}</h3>
+                      <h3 className="font-bold text-[#2E3A59] text-sm">{demand.title}</h3>
                       <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                     </div>
-                    <p className="text-sm text-[#122A3A]/70 mb-3 line-clamp-2">{demand.subject}</p>
-                    <p className="text-xs text-[#122A3A]/60 mb-1">{event?.name}</p>
-                    <p className="text-xs text-[#122A3A]/60 mb-4">{demand.date.toLocaleDateString('pt-BR')}</p>
+                    <p className="text-sm text-[#2E3A59]/70 mb-3 line-clamp-2">{demand.subject}</p>
+                    <p className="text-xs text-[#2E3A59]/60 mb-1">{event?.name}</p>
+                    <p className="text-xs text-[#2E3A59]/60 mb-4">{demand.date.toLocaleDateString('pt-BR')}</p>
                     <Button 
                       onClick={() => handleUpdateDemand(demand.eventId, demand.id, { completed: false })}
                       className="w-full text-xs h-8 bg-gradient-to-r from-[#467BCA] to-[#77D1A8] hover:opacity-90 text-white rounded-xl transition-all duration-200"
@@ -645,9 +662,9 @@ const EventManagementSystem = () => {
               })}
               
               {completedDemands.length === 0 && (
-                <div className="col-span-full text-center py-16 bg-white rounded-xl border border-gray-100">
+                <div className="col-span-full text-center py-16 bg-[#F6F7FB] rounded-xl border border-[rgba(0,0,0,0.05)]">
                   <div className="text-5xl mb-4">✅</div>
-                  <p className="text-base font-medium text-[#122A3A]">Nenhuma demanda concluída</p>
+                  <p className="text-base font-medium text-[#2E3A59]">Nenhuma demanda concluída</p>
                 </div>
               )}
             </div>
