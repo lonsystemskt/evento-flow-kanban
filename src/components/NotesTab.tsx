@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Edit, Plus } from 'lucide-react';
+import { Edit, Plus, Trash2 } from 'lucide-react';
 import { Note } from '@/types/event';
 import NotesModal from './NotesModal';
 
@@ -36,6 +36,38 @@ const NotesTab = ({ notes, onAddNote, onUpdateNote, onDeleteNote }: NotesTabProp
     setEditingNote(null);
   };
 
+  const handleDeleteNote = (id: string) => {
+    if (confirm('Tem certeza que deseja excluir esta anotação?')) {
+      onDeleteNote(id);
+    }
+  };
+
+  // Sort notes by date with most recent first (high priority)
+  const sortedNotes = [...notes].sort((a, b) => {
+    return a.date.getTime() - b.date.getTime();
+  });
+
+  const getPriorityColor = (date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const noteDate = new Date(date);
+    noteDate.setHours(0, 0, 0, 0);
+    
+    if (noteDate < today) {
+      return 'bg-red-500'; // Overdue/high priority
+    } else if (noteDate.getTime() === today.getTime()) {
+      return 'bg-orange-500'; // Today
+    } else if (noteDate.getTime() === tomorrow.getTime()) {
+      return 'bg-green-500'; // Tomorrow
+    } else {
+      return 'bg-gray-400'; // Future
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
@@ -50,18 +82,31 @@ const NotesTab = ({ notes, onAddNote, onUpdateNote, onDeleteNote }: NotesTabProp
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
         {notes.length > 0 ? (
-          notes.map((note) => (
+          sortedNotes.map((note) => (
             <div key={note.id} className="bg-[#F6F7FB] dark:bg-[#1A1F2B] rounded-lg border border-[rgba(0,0,0,0.05)] dark:border-[rgba(60,60,60,0.1)] p-4 hover:bg-[#F0F2F7] dark:hover:bg-[#212736] transition-all duration-200 shadow-sm">
               <div className="flex items-start justify-between mb-3">
-                <h4 className="font-semibold text-[#2E3A59] dark:text-white text-sm line-clamp-2 flex-1 text-left">{note.title}</h4>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleEditNote(note)}
-                  className="w-6 h-6 p-0 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 rounded-md transition-colors duration-200 flex-shrink-0 ml-2"
-                >
-                  <Edit className="w-3 h-3" />
-                </Button>
+                <div className="flex items-center gap-2">
+                  <div className={`w-3 h-3 rounded-full ${getPriorityColor(note.date)} flex-shrink-0`}></div>
+                  <h4 className="font-semibold text-[#2E3A59] dark:text-white text-sm line-clamp-2 flex-1 text-left">{note.title}</h4>
+                </div>
+                <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleEditNote(note)}
+                    className="w-6 h-6 p-0 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 rounded-md transition-colors duration-200 flex-shrink-0"
+                  >
+                    <Edit className="w-3 h-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDeleteNote(note.id)}
+                    className="w-6 h-6 p-0 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400 rounded-md transition-colors duration-200 flex-shrink-0"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
+                </div>
               </div>
               
               <p className="text-[#3B4D63] dark:text-gray-300 text-xs mb-3 line-clamp-3 leading-relaxed text-left">{note.subject}</p>

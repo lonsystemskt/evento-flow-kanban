@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Event, Demand, CRM, Note } from '@/types/event';
 
@@ -373,7 +372,7 @@ export const deleteNote = async (id: string): Promise<void> => {
 
 // Real-time subscription setup
 export const setupRealtimeSubscriptions = (onEventsChange: () => void, onDemandsChange: () => void, onCRMChange: () => void, onNotesChange: () => void) => {
-  // Listen for changes to the events table
+  // Enable real-time for events table
   const eventsChannel = supabase
     .channel('events-changes')
     .on(
@@ -386,7 +385,7 @@ export const setupRealtimeSubscriptions = (onEventsChange: () => void, onDemands
     )
     .subscribe();
 
-  // Listen for changes to the demands table  
+  // Enable real-time for demands table  
   const demandsChannel = supabase
     .channel('demands-changes')
     .on(
@@ -399,7 +398,7 @@ export const setupRealtimeSubscriptions = (onEventsChange: () => void, onDemands
     )
     .subscribe();
 
-  // Listen for changes to the CRM records table
+  // Enable real-time for CRM records table
   const crmChannel = supabase
     .channel('crm-changes')
     .on(
@@ -412,7 +411,7 @@ export const setupRealtimeSubscriptions = (onEventsChange: () => void, onDemands
     )
     .subscribe();
 
-  // Listen for changes to the notes table
+  // Enable real-time for notes table
   const notesChannel = supabase
     .channel('notes-changes')
     .on(
