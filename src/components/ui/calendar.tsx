@@ -15,19 +15,41 @@ function Calendar({
 }: CalendarProps) {
   const handleDayClick = (day: Date, modifiers: any, e: React.MouseEvent) => {
     if (!modifiers.disabled) {
-      // Type-safe check for onSelect based on mode
+      // Handle different selection modes properly
       if ('onSelect' in props && typeof props.onSelect === 'function') {
-        props.onSelect(day, day, modifiers, e);
+        if (props.mode === 'single') {
+          (props.onSelect as any)(day, day, modifiers, e);
+        } else if (props.mode === 'multiple') {
+          // For multiple mode, we need to handle array of dates
+          const currentSelected = props.selected as Date[] || [];
+          const isSelected = currentSelected.some(date => 
+            date.toDateString() === day.toDateString()
+          );
+          let newSelected: Date[];
+          if (isSelected) {
+            newSelected = currentSelected.filter(date => 
+              date.toDateString() !== day.toDateString()
+            );
+          } else {
+            newSelected = [...currentSelected, day];
+          }
+          (props.onSelect as any)(newSelected, day, modifiers, e);
+        } else {
+          // Default case
+          (props.onSelect as any)(day, day, modifiers, e);
+        }
       }
       
-      // Close popover after selection
-      setTimeout(() => {
-        const popoverTrigger = document.querySelector('[data-state="open"]');
-        if (popoverTrigger) {
-          const closeEvent = new KeyboardEvent('keydown', { key: 'Escape' });
-          document.dispatchEvent(closeEvent);
-        }
-      }, 100);
+      // Close popover after selection for single mode
+      if (props.mode === 'single') {
+        setTimeout(() => {
+          const popoverTrigger = document.querySelector('[data-state="open"]');
+          if (popoverTrigger) {
+            const closeEvent = new KeyboardEvent('keydown', { key: 'Escape' });
+            document.dispatchEvent(closeEvent);
+          }
+        }, 100);
+      }
     }
   };
 
