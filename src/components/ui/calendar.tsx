@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { DayPicker } from "react-day-picker";
@@ -14,11 +13,11 @@ function Calendar({
   showOutsideDays = true,
   ...props
 }: CalendarProps) {
-  const handleDayClick = (day: Date, modifiers: any) => {
+  const handleDayClick = (day: Date, modifiers: any, e: React.MouseEvent) => {
     if (!modifiers.disabled) {
       // Type-safe check for onSelect based on mode
       if ('onSelect' in props && typeof props.onSelect === 'function') {
-        props.onSelect(day);
+        props.onSelect(day, day, modifiers, e);
       }
       
       // Close popover after selection
