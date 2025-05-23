@@ -78,9 +78,9 @@ const EventRow = ({
         <div className="flex items-center gap-2 w-44 flex-shrink-0">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-50/50 to-green-50/50 rounded-full flex items-center justify-center cursor-pointer hover:bg-gradient-to-br hover:from-blue-100/50 hover:to-green-100/50 transition-all duration-200 relative group">
+              <div className="w-12 h-12 bg-gradient-to-br from-[#467BCA]/10 to-[#77D1A8]/10 rounded-full flex items-center justify-center cursor-pointer hover:bg-gradient-to-br hover:from-[#467BCA]/20 hover:to-[#77D1A8]/20 transition-all duration-200 relative group border border-gradient-to-r border-[#467BCA]/30 border-[#77D1A8]/30 shadow-sm">
                 {event.logo ? (
-                  <img src={event.logo} alt={event.name} className="w-12 h-12 rounded-full object-cover" />
+                  <img src={event.logo} alt={event.name} className="w-12 h-12 rounded-full object-cover border border-gradient-to-r border-[#467BCA]/30 border-[#77D1A8]/30" />
                 ) : (
                   <span className="text-[#122A3A] font-bold text-base">{event.name.charAt(0).toUpperCase()}</span>
                 )}
@@ -105,7 +105,7 @@ const EventRow = ({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <div className="flex-1 min-w-0 max-w-[100px] flex flex-col">
+          <div className="flex-1 min-w-0 max-w-[100px] flex flex-col text-left">
             <h3 className="text-sm font-bold text-[#122A3A] truncate leading-tight mb-0.5">{event.name}</h3>
             <p className="text-xs text-[#122A3A]/60 font-bold">{event.date.toLocaleDateString('pt-BR')}</p>
           </div>
@@ -163,9 +163,9 @@ const EventRow = ({
               </div>
             </>
           ) : (
-            <div className="text-center py-3 text-[#122A3A]/50 bg-gray-50/20 rounded-lg border border-dashed border-gray-200/30">
-              <p className="text-xs font-medium mb-0.5">Sem demandas</p>
-              <p className="text-xs">Clique no botão + para criar uma nova demanda</p>
+            <div className="text-left py-3 text-[#122A3A]/50 bg-gray-50/20 rounded-lg border border-dashed border-gray-200/30">
+              <p className="text-xs font-medium mb-0.5 pl-3">Sem demandas</p>
+              <p className="text-xs pl-3">Clique no botão + para criar uma nova demanda</p>
             </div>
           )}
         </div>

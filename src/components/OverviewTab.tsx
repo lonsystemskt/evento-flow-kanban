@@ -41,21 +41,21 @@ const OverviewTab = ({ events, onEditDemand, onCompleteDemand }: OverviewTabProp
           <div key={demand.id} className="bg-gray-50/40 rounded-lg border border-gray-200/30 p-3 hover:bg-gray-50/60 transition-all duration-200">
             <div className="flex items-center gap-3">
               {/* Event Logo */}
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-50/50 to-green-50/50 rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 bg-gradient-to-br from-[#467BCA]/10 to-[#77D1A8]/10 rounded-full flex items-center justify-center flex-shrink-0 border border-gradient-to-r border-[#467BCA]/30 border-[#77D1A8]/30 shadow-sm">
                 {demand.eventLogo ? (
-                  <img src={demand.eventLogo} alt={demand.eventName} className="w-10 h-10 rounded-full object-cover" />
+                  <img src={demand.eventLogo} alt={demand.eventName} className="w-10 h-10 rounded-full object-cover border border-gradient-to-r border-[#467BCA]/30 border-[#77D1A8]/30" />
                 ) : (
                   <span className="text-[#122A3A] font-bold text-sm">{demand.eventName.charAt(0).toUpperCase()}</span>
                 )}
               </div>
 
               {/* Event Name */}
-              <div className="min-w-0 w-32 flex-shrink-0">
+              <div className="min-w-0 w-32 flex-shrink-0 text-left">
                 <p className="text-sm font-medium text-[#122A3A] truncate">{demand.eventName}</p>
               </div>
 
               {/* Demand Info */}
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 text-left">
                 <h4 className="font-semibold text-[#122A3A] text-sm mb-1 truncate">{demand.title}</h4>
                 <p className="text-[#122A3A]/60 text-xs truncate">{demand.subject}</p>
               </div>
@@ -91,7 +91,7 @@ const OverviewTab = ({ events, onEditDemand, onCompleteDemand }: OverviewTabProp
           </div>
         ))
       ) : (
-        <div className="text-center py-20 bg-white rounded-xl border border-gray-200 shadow-sm">
+        <div className="text-left py-20 bg-white rounded-xl border border-gray-200 shadow-sm px-6">
           <div className="text-6xl mb-6">📊</div>
           <p className="text-xl font-medium text-[#122A3A] mb-3">Nenhuma demanda ativa</p>
           <p className="text-base text-[#122A3A]/70">Todas as demandas foram concluídas</p>

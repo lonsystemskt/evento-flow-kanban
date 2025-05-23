@@ -53,7 +53,7 @@ const NotesTab = ({ notes, onAddNote, onUpdateNote, onDeleteNote }: NotesTabProp
           notes.map((note) => (
             <div key={note.id} className="bg-gray-50/40 rounded-lg border border-gray-200/30 p-4 hover:bg-gray-50/60 transition-all duration-200">
               <div className="flex items-start justify-between mb-3">
-                <h4 className="font-semibold text-[#122A3A] text-sm line-clamp-2 flex-1">{note.title}</h4>
+                <h4 className="font-semibold text-[#122A3A] text-sm line-clamp-2 flex-1 text-left">{note.title}</h4>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -64,7 +64,7 @@ const NotesTab = ({ notes, onAddNote, onUpdateNote, onDeleteNote }: NotesTabProp
                 </Button>
               </div>
               
-              <p className="text-[#122A3A]/60 text-xs mb-3 line-clamp-3 leading-relaxed">{note.subject}</p>
+              <p className="text-[#122A3A]/60 text-xs mb-3 line-clamp-3 leading-relaxed text-left">{note.subject}</p>
               
               <div className="flex items-center justify-between text-xs">
                 <span className="text-[#122A3A]/50 font-medium">
@@ -77,7 +77,7 @@ const NotesTab = ({ notes, onAddNote, onUpdateNote, onDeleteNote }: NotesTabProp
             </div>
           ))
         ) : (
-          <div className="col-span-full text-center py-20 bg-white rounded-xl border border-gray-200 shadow-sm">
+          <div className="col-span-full text-left py-20 bg-white rounded-xl border border-gray-200 shadow-sm px-6">
             <div className="text-6xl mb-6">📝</div>
             <p className="text-xl font-medium text-[#122A3A] mb-3">Nenhuma anotação</p>
             <p className="text-base text-[#122A3A]/70">Clique em "Nova Anotação" para começar</p>

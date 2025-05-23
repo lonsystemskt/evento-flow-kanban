@@ -57,22 +57,22 @@ const CRMTab = ({ crmRecords, onAddCRM, onUpdateCRM, onDeleteCRM }: CRMTabProps)
                 <div className={`w-3 h-3 rounded-full ${crm.completed ? 'bg-green-500' : 'bg-gray-400'} flex-shrink-0`}></div>
 
                 {/* Name */}
-                <div className="min-w-0 w-40 flex-shrink-0">
+                <div className="min-w-0 w-40 flex-shrink-0 text-left">
                   <p className="text-xs font-medium text-[#122A3A] truncate">{crm.name}</p>
                 </div>
 
                 {/* Contact */}
-                <div className="min-w-0 w-32 flex-shrink-0">
+                <div className="min-w-0 w-32 flex-shrink-0 text-left">
                   <p className="text-xs text-[#122A3A]/60 truncate">{crm.contact}</p>
                 </div>
 
                 {/* Email */}
-                <div className="min-w-0 w-48 flex-shrink-0">
+                <div className="min-w-0 w-48 flex-shrink-0 text-left">
                   <p className="text-xs text-[#122A3A]/60 truncate">{crm.email}</p>
                 </div>
 
                 {/* Subject */}
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 text-left">
                   <p className="text-xs text-[#122A3A] truncate">{crm.subject}</p>
                 </div>
 
@@ -120,7 +120,7 @@ const CRMTab = ({ crmRecords, onAddCRM, onUpdateCRM, onDeleteCRM }: CRMTabProps)
             </div>
           ))
         ) : (
-          <div className="text-center py-20 bg-white rounded-xl border border-gray-200 shadow-sm">
+          <div className="text-left py-20 bg-white rounded-xl border border-gray-200 shadow-sm px-6">
             <div className="text-6xl mb-6">📞</div>
             <p className="text-xl font-medium text-[#122A3A] mb-3">Nenhum registro CRM</p>
             <p className="text-base text-[#122A3A]/70">Clique em "Novo Registro CRM" para começar</p>

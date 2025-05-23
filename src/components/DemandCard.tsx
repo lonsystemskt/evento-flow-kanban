@@ -54,7 +54,7 @@ const DemandCard = ({ demand, onEdit, onDelete, onComplete }: DemandCardProps) =
       </div>
 
       {/* Content - Takes available space */}
-      <div className="flex-1 flex flex-col mb-2">
+      <div className="flex-1 flex flex-col mb-2 text-left">
         <h4 className="font-semibold text-[#122A3A] text-sm mb-1 line-clamp-2 leading-tight">
           {demand.title || 'Título não informado'}
         </h4>
