@@ -30,13 +30,12 @@ const EventManagementSystem = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  // Improved data loading function with better error handling
+  // Enhanced data loading function
   const loadAllData = async () => {
     try {
-      console.log('🔄 Loading all data...');
+      console.log('🔄 Carregando todos os dados...');
       setIsLoading(true);
       
-      // Load events and demands in parallel
       const [eventsData, demandsData, crmData, notesData] = await Promise.all([
         fetchEvents(),
         fetchDemands(),
@@ -44,10 +43,12 @@ const EventManagementSystem = () => {
         fetchNotes()
       ]);
 
-      console.log('✅ Events loaded:', eventsData.length);
-      console.log('✅ Demands loaded:', demandsData.length);
-      console.log('✅ CRM records loaded:', crmData.length);
-      console.log('✅ Notes loaded:', notesData.length);
+      console.log('✅ Dados carregados:', {
+        eventos: eventsData.length,
+        demandas: demandsData.length,
+        crm: crmData.length,
+        notas: notesData.length
+      });
 
       // Associate demands with their events
       const eventsWithDemands = eventsData.map(event => ({
@@ -60,7 +61,7 @@ const EventManagementSystem = () => {
       setNotes(notesData);
       
     } catch (error) {
-      console.error('❌ Error loading data:', error);
+      console.error('❌ Erro ao carregar dados:', error);
       toast({
         title: "Erro",
         description: "Falha ao carregar dados. Tente novamente.",
@@ -78,12 +79,12 @@ const EventManagementSystem = () => {
 
   // Enhanced real-time subscriptions with immediate updates
   useEffect(() => {
-    console.log('🔌 Setting up real-time subscriptions...');
+    console.log('🔌 Configurando subscriptions em tempo real...');
     
     const cleanup = setupRealtimeSubscriptions(
-      // Events change handler - reload events and demands immediately
+      // Events change handler - CRÍTICO PARA SINCRONIZAÇÃO
       async () => {
-        console.log('🔄 Event change detected - reloading events...');
+        console.log('🔥 MUDANÇA EM EVENTOS DETECTADA - Recarregando...');
         try {
           const [eventsData, demandsData] = await Promise.all([
             fetchEvents(),
@@ -95,22 +96,22 @@ const EventManagementSystem = () => {
             demands: demandsData.filter(demand => demand.eventId === event.id)
           }));
           
-          console.log('✅ Events updated via real-time:', eventsWithDemands.length);
+          console.log('✅ EVENTOS ATUALIZADOS EM TEMPO REAL:', eventsWithDemands.length);
           setEvents(eventsWithDemands);
           
-          // Show toast notification for event updates
+          // Show toast notification
           toast({
             title: "Atualização",
             description: "Eventos atualizados em tempo real",
             duration: 2000
           });
         } catch (error) {
-          console.error('❌ Error updating events in real-time:', error);
+          console.error('❌ Erro ao atualizar eventos em tempo real:', error);
         }
       },
-      // Demands change handler - reload demands for all events immediately
+      // Demands change handler
       async () => {
-        console.log('🔄 Demand change detected - reloading demands...');
+        console.log('🔥 MUDANÇA EM DEMANDAS DETECTADA - Recarregando...');
         try {
           const demandsData = await fetchDemands();
           
@@ -119,54 +120,51 @@ const EventManagementSystem = () => {
               ...event,
               demands: demandsData.filter(demand => demand.eventId === event.id)
             }));
-            console.log('✅ Demands updated via real-time for events:', updatedEvents.length);
+            console.log('✅ DEMANDAS ATUALIZADAS EM TEMPO REAL');
             return updatedEvents;
           });
           
-          // Show toast notification for demand updates
           toast({
             title: "Atualização",
             description: "Demandas atualizadas em tempo real",
             duration: 2000
           });
         } catch (error) {
-          console.error('❌ Error updating demands in real-time:', error);
+          console.error('❌ Erro ao atualizar demandas em tempo real:', error);
         }
       },
       // CRM change handler
       async () => {
-        console.log('🔄 CRM change detected - reloading CRM records...');
+        console.log('🔥 MUDANÇA EM CRM DETECTADA - Recarregando...');
         try {
           const crmData = await fetchCRMRecords();
-          console.log('✅ CRM records updated via real-time:', crmData.length);
+          console.log('✅ CRM ATUALIZADO EM TEMPO REAL:', crmData.length);
           setCrmRecords(crmData);
           
-          // Show toast notification for CRM updates
           toast({
             title: "Atualização",
             description: "Registros CRM atualizados em tempo real",
             duration: 2000
           });
         } catch (error) {
-          console.error('❌ Error updating CRM records in real-time:', error);
+          console.error('❌ Erro ao atualizar CRM em tempo real:', error);
         }
       },
       // Notes change handler
       async () => {
-        console.log('🔄 Notes change detected - reloading notes...');
+        console.log('🔥 MUDANÇA EM NOTAS DETECTADA - Recarregando...');
         try {
           const notesData = await fetchNotes();
-          console.log('✅ Notes updated via real-time:', notesData.length);
+          console.log('✅ NOTAS ATUALIZADAS EM TEMPO REAL:', notesData.length);
           setNotes(notesData);
           
-          // Show toast notification for notes updates
           toast({
             title: "Atualização",
             description: "Anotações atualizadas em tempo real",
             duration: 2000
           });
         } catch (error) {
-          console.error('❌ Error updating notes in real-time:', error);
+          console.error('❌ Erro ao atualizar notas em tempo real:', error);
         }
       }
     );
@@ -183,19 +181,21 @@ const EventManagementSystem = () => {
     return `Bem-vindo! Hoje é ${day}, ${date} - ${time}`;
   };
 
-  // Event handlers with immediate local updates
+  // Event handlers with enhanced logging
   const handleCreateEvent = async (eventData: Omit<Event, 'id' | 'archived' | 'demands'>) => {
     try {
+      console.log('🆕 Criando novo evento:', eventData.name);
       const newEvent = await createEvent(eventData);
-      // Immediate local update (real-time will also trigger)
-      setEvents(prev => [...prev, { ...newEvent, demands: [] }]);
+      console.log('✅ Evento criado com sucesso:', newEvent.id);
+      
+      // Don't update local state - real-time will handle it
       setIsEventModalOpen(false);
       toast({
         title: "Sucesso",
         description: "Evento criado com sucesso",
       });
     } catch (error) {
-      console.error('Error creating event:', error);
+      console.error('❌ Erro ao criar evento:', error);
       toast({
         title: "Erro",
         description: "Falha ao criar evento. Tente novamente.",
@@ -208,15 +208,11 @@ const EventManagementSystem = () => {
     if (!editingEvent) return;
     
     try {
+      console.log('✏️ Editando evento:', editingEvent.id, eventData);
       await updateEvent(editingEvent.id, eventData);
+      console.log('✅ Evento editado com sucesso:', editingEvent.id);
       
-      // Immediate local update (real-time will also trigger)
-      setEvents(prev => prev.map(event => 
-        event.id === editingEvent.id 
-          ? { ...event, ...eventData }
-          : event
-      ));
-      
+      // Don't update local state - real-time will handle it
       setEditingEvent(null);
       setIsEventModalOpen(false);
       toast({
@@ -224,7 +220,7 @@ const EventManagementSystem = () => {
         description: "Evento atualizado com sucesso",
       });
     } catch (error) {
-      console.error('Error editing event:', error);
+      console.error('❌ Erro ao editar evento:', error);
       toast({
         title: "Erro",
         description: "Falha ao atualizar evento. Tente novamente.",
@@ -235,20 +231,16 @@ const EventManagementSystem = () => {
 
   const handleArchiveEvent = async (eventId: string) => {
     try {
+      console.log('📦 Arquivando evento:', eventId);
       await updateEvent(eventId, { archived: true });
-      
-      setEvents(prev => prev.map(event => 
-        event.id === eventId 
-          ? { ...event, archived: true }
-          : event
-      ));
+      console.log('✅ Evento arquivado com sucesso:', eventId);
       
       toast({
         title: "Sucesso",
         description: "Evento arquivado com sucesso",
       });
     } catch (error) {
-      console.error('Error archiving event:', error);
+      console.error('❌ Erro ao arquivar evento:', error);
       toast({
         title: "Erro",
         description: "Falha ao arquivar evento. Tente novamente.",
@@ -259,14 +251,16 @@ const EventManagementSystem = () => {
 
   const handleDeleteEvent = async (eventId: string) => {
     try {
+      console.log('🗑️ Deletando evento:', eventId);
       await deleteEvent(eventId);
-      setEvents(prev => prev.filter(event => event.id !== eventId));
+      console.log('✅ Evento deletado com sucesso:', eventId);
+      
       toast({
         title: "Sucesso",
         description: "Evento excluído com sucesso",
       });
     } catch (error) {
-      console.error('Error deleting event:', error);
+      console.error('❌ Erro ao deletar evento:', error);
       toast({
         title: "Erro",
         description: "Falha ao excluir evento. Tente novamente.",
@@ -277,20 +271,16 @@ const EventManagementSystem = () => {
 
   const handleRestoreEvent = async (eventId: string) => {
     try {
+      console.log('🔄 Restaurando evento:', eventId);
       await updateEvent(eventId, { archived: false });
-      
-      setEvents(prev => prev.map(event => 
-        event.id === eventId 
-          ? { ...event, archived: false }
-          : event
-      ));
+      console.log('✅ Evento restaurado com sucesso:', eventId);
       
       toast({
         title: "Sucesso",
         description: "Evento restaurado com sucesso",
       });
     } catch (error) {
-      console.error('Error restoring event:', error);
+      console.error('❌ Erro ao restaurar evento:', error);
       toast({
         title: "Erro",
         description: "Falha ao restaurar evento. Tente novamente.",

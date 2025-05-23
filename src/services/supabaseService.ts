@@ -3,16 +3,18 @@ import { Event, Demand, CRM, Note } from '@/types/event';
 
 // Events
 export const fetchEvents = async (): Promise<Event[]> => {
+  console.log('🔄 Fetching events from database...');
   const { data, error } = await supabase
     .from('events')
     .select('*')
     .order('date', { ascending: true });
   
   if (error) {
-    console.error('Error fetching events:', error);
+    console.error('❌ Error fetching events:', error);
     throw error;
   }
 
+  console.log('✅ Events fetched successfully:', data?.length || 0);
   return data.map((event: any) => ({
     ...event,
     date: new Date(event.date),
@@ -21,6 +23,7 @@ export const fetchEvents = async (): Promise<Event[]> => {
 };
 
 export const createEvent = async (event: Omit<Event, 'id' | 'archived' | 'demands'>): Promise<Event> => {
+  console.log('🔄 Creating new event:', event.name);
   const { data, error } = await supabase
     .from('events')
     .insert({
@@ -32,10 +35,11 @@ export const createEvent = async (event: Omit<Event, 'id' | 'archived' | 'demand
     .single();
   
   if (error) {
-    console.error('Error creating event:', error);
+    console.error('❌ Error creating event:', error);
     throw error;
   }
 
+  console.log('✅ Event created successfully:', data.id);
   return {
     ...data,
     date: new Date(data.date),
@@ -44,6 +48,7 @@ export const createEvent = async (event: Omit<Event, 'id' | 'archived' | 'demand
 };
 
 export const updateEvent = async (id: string, event: Partial<Event>): Promise<void> => {
+  console.log('🔄 Updating event:', id, event);
   const updates: any = { ...event };
   
   // Convert Date object to ISO string for database storage
@@ -51,27 +56,35 @@ export const updateEvent = async (id: string, event: Partial<Event>): Promise<vo
     updates.date = updates.date.toISOString();
   }
   
+  // Remove demands from updates as it's not a database column
+  delete updates.demands;
+  
   const { error } = await supabase
     .from('events')
     .update(updates)
     .eq('id', id);
   
   if (error) {
-    console.error('Error updating event:', error);
+    console.error('❌ Error updating event:', error);
     throw error;
   }
+
+  console.log('✅ Event updated successfully:', id);
 };
 
 export const deleteEvent = async (id: string): Promise<void> => {
+  console.log('🔄 Deleting event:', id);
   const { error } = await supabase
     .from('events')
     .delete()
     .eq('id', id);
   
   if (error) {
-    console.error('Error deleting event:', error);
+    console.error('❌ Error deleting event:', error);
     throw error;
   }
+
+  console.log('✅ Event deleted successfully:', id);
 };
 
 // Demands
@@ -264,7 +277,6 @@ export const createCRMRecord = async (crm: Omit<CRM, 'id'>): Promise<CRM> => {
 export const updateCRMRecord = async (id: string, crm: Partial<CRM>): Promise<void> => {
   const updates: any = { ...crm };
   
-  // Convert Date object to ISO string for database storage
   if (updates.date instanceof Date) {
     updates.date = updates.date.toISOString();
   }
@@ -342,7 +354,6 @@ export const createNote = async (note: Omit<Note, 'id'>): Promise<Note> => {
 export const updateNote = async (id: string, note: Partial<Note>): Promise<void> => {
   const updates: any = { ...note };
   
-  // Convert Date object to ISO string for database storage
   if (updates.date instanceof Date) {
     updates.date = updates.date.toISOString();
   }
@@ -370,13 +381,18 @@ export const deleteNote = async (id: string): Promise<void> => {
   }
 };
 
-// Real-time subscription setup with proper channel configuration
-export const setupRealtimeSubscriptions = (onEventsChange: () => void, onDemandsChange: () => void, onCRMChange: () => void, onNotesChange: () => void) => {
-  console.log('Setting up realtime subscriptions...');
+// Enhanced real-time subscription setup with proper channel configuration
+export const setupRealtimeSubscriptions = (
+  onEventsChange: () => void, 
+  onDemandsChange: () => void, 
+  onCRMChange: () => void, 
+  onNotesChange: () => void
+) => {
+  console.log('🔌 Setting up enhanced real-time subscriptions...');
   
-  // Enable real-time for events table with unique channel names
+  // Events channel with enhanced logging
   const eventsChannel = supabase
-    .channel('events-changes')
+    .channel('public:events')
     .on(
       'postgres_changes',
       { 
@@ -385,24 +401,35 @@ export const setupRealtimeSubscriptions = (onEventsChange: () => void, onDemands
         table: 'events' 
       },
       (payload) => {
-        console.log('Events realtime change received:', payload);
-        console.log('Event change type:', payload.eventType);
-        console.log('Event data:', payload.new || payload.old);
+        console.log('🔥 EVENTO EM TEMPO REAL DETECTADO:', payload);
+        console.log('🔥 Tipo de mudança:', payload.eventType);
+        console.log('🔥 Dados do evento:', payload.new || payload.old);
+        
+        // Trigger immediate update
         onEventsChange();
+        
+        // Additional logging for debugging
+        if (payload.eventType === 'INSERT') {
+          console.log('➕ Novo evento criado:', payload.new?.name);
+        } else if (payload.eventType === 'UPDATE') {
+          console.log('✏️ Evento editado:', payload.new?.name);
+        } else if (payload.eventType === 'DELETE') {
+          console.log('🗑️ Evento deletado:', payload.old?.name);
+        }
       }
     )
     .subscribe((status) => {
-      console.log('Events channel subscription status:', status);
+      console.log('📡 Events channel status:', status);
       if (status === 'SUBSCRIBED') {
-        console.log('✅ Events real-time subscription active');
-      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-        console.error('❌ Events real-time subscription failed:', status);
+        console.log('✅ EVENTOS: Sincronização em tempo real ATIVA');
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+        console.error('❌ EVENTOS: Falha na sincronização em tempo real:', status);
       }
     });
 
-  // Enable real-time for demands table with unique channel names
+  // Demands channel
   const demandsChannel = supabase
-    .channel('demands-changes')
+    .channel('public:demands')
     .on(
       'postgres_changes',
       { 
@@ -411,24 +438,22 @@ export const setupRealtimeSubscriptions = (onEventsChange: () => void, onDemands
         table: 'demands' 
       },
       (payload) => {
-        console.log('Demands realtime change received:', payload);
-        console.log('Demand change type:', payload.eventType);
-        console.log('Demand data:', payload.new || payload.old);
+        console.log('🔥 DEMANDA EM TEMPO REAL DETECTADA:', payload);
         onDemandsChange();
       }
     )
     .subscribe((status) => {
-      console.log('Demands channel subscription status:', status);
+      console.log('📡 Demands channel status:', status);
       if (status === 'SUBSCRIBED') {
-        console.log('✅ Demands real-time subscription active');
-      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-        console.error('❌ Demands real-time subscription failed:', status);
+        console.log('✅ DEMANDAS: Sincronização em tempo real ATIVA');
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+        console.error('❌ DEMANDAS: Falha na sincronização em tempo real:', status);
       }
     });
 
-  // Enable real-time for CRM records table with unique channel names
+  // CRM channel
   const crmChannel = supabase
-    .channel('crm-changes')
+    .channel('public:crm_records')
     .on(
       'postgres_changes',
       { 
@@ -437,24 +462,22 @@ export const setupRealtimeSubscriptions = (onEventsChange: () => void, onDemands
         table: 'crm_records' 
       },
       (payload) => {
-        console.log('CRM realtime change received:', payload);
-        console.log('CRM change type:', payload.eventType);
-        console.log('CRM data:', payload.new || payload.old);
+        console.log('🔥 CRM EM TEMPO REAL DETECTADO:', payload);
         onCRMChange();
       }
     )
     .subscribe((status) => {
-      console.log('CRM channel subscription status:', status);
+      console.log('📡 CRM channel status:', status);
       if (status === 'SUBSCRIBED') {
-        console.log('✅ CRM real-time subscription active');
-      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-        console.error('❌ CRM real-time subscription failed:', status);
+        console.log('✅ CRM: Sincronização em tempo real ATIVA');
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+        console.error('❌ CRM: Falha na sincronização em tempo real:', status);
       }
     });
 
-  // Enable real-time for notes table with unique channel names
+  // Notes channel
   const notesChannel = supabase
-    .channel('notes-changes')
+    .channel('public:notes')
     .on(
       'postgres_changes',
       { 
@@ -463,28 +486,26 @@ export const setupRealtimeSubscriptions = (onEventsChange: () => void, onDemands
         table: 'notes' 
       },
       (payload) => {
-        console.log('Notes realtime change received:', payload);
-        console.log('Note change type:', payload.eventType);
-        console.log('Note data:', payload.new || payload.old);
+        console.log('🔥 NOTA EM TEMPO REAL DETECTADA:', payload);
         onNotesChange();
       }
     )
     .subscribe((status) => {
-      console.log('Notes channel subscription status:', status);
+      console.log('📡 Notes channel status:', status);
       if (status === 'SUBSCRIBED') {
-        console.log('✅ Notes real-time subscription active');
-      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-        console.error('❌ Notes real-time subscription failed:', status);
+        console.log('✅ NOTAS: Sincronização em tempo real ATIVA');
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+        console.error('❌ NOTAS: Falha na sincronização em tempo real:', status);
       }
     });
 
-  // Return cleanup function to remove all channels
+  // Return cleanup function
   return () => {
-    console.log('Cleaning up realtime subscriptions...');
+    console.log('🧹 Limpando subscriptions em tempo real...');
     supabase.removeChannel(eventsChannel);
     supabase.removeChannel(demandsChannel);
     supabase.removeChannel(crmChannel);
     supabase.removeChannel(notesChannel);
-    console.log('All real-time channels removed');
+    console.log('✅ Todos os canais em tempo real removidos');
   };
 };
