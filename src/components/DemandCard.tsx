@@ -39,7 +39,7 @@ const DemandCard = ({ demand, onEdit, onDelete, onComplete }: DemandCardProps) =
   };
 
   return (
-    <div className="min-w-[260px] max-w-[260px] min-h-[150px] bg-white border border-gray-100 rounded-lg transition-all duration-200 p-3 relative group hover:border-gray-200">
+    <div className="min-w-[260px] max-w-[260px] min-h-[170px] bg-white border border-gray-100 rounded-lg transition-all duration-200 p-3 relative group hover:border-gray-200">
       {/* Urgency Indicator */}
       <div 
         className={`absolute top-2 right-2 w-2.5 h-2.5 rounded-full ${getUrgencyColor(demand.urgency)}`}
@@ -47,7 +47,7 @@ const DemandCard = ({ demand, onEdit, onDelete, onComplete }: DemandCardProps) =
       ></div>
 
       {/* Content */}
-      <div className="pr-3 mb-3">
+      <div className="pr-3 mb-16">
         <h4 className="font-bold text-[#122A3A] text-sm mb-1.5 line-clamp-2 leading-tight">{demand.title}</h4>
         <p className="text-[#122A3A]/70 text-xs mb-2 line-clamp-2 leading-relaxed">{demand.subject}</p>
         <p className="text-[#122A3A]/60 text-xs">{demand.date.toLocaleDateString('pt-BR')}</p>

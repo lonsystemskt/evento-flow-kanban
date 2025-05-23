@@ -57,9 +57,7 @@ function Calendar({
         IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
       }}
       onDayClick={(day, modifiers) => {
-        // The correct way to handle day selection without using the non-existent onSelect
-        if (props.selected && props.onSelect && !modifiers.disabled) {
-          props.onSelect(day);
+        if (!modifiers.disabled) {
           // Close calendar popover after selection
           const popoverElement = document.querySelector('[data-state="open"][role="dialog"]');
           if (popoverElement) {

@@ -142,7 +142,7 @@ const EventRow = ({
               <div 
                 ref={scrollContainerRef}
                 className="flex gap-2 overflow-x-auto scrollbar-hide py-1 px-7"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', minHeight: '180px' }}
               >
                 {activeDemands.map(demand => (
                   <DemandCard
