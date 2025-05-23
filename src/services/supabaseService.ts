@@ -87,12 +87,12 @@ export const fetchEvents = async (forceRefresh = false): Promise<Event[]> => {
     console.log('🔄 Carregando eventos...');
     
     const result = await retryOperation(async () => {
-      return await withTimeout(
-        supabase
-          .from('events')
-          .select('*')
-          .order('date', { ascending: true })
-      );
+      const query = supabase
+        .from('events')
+        .select('*')
+        .order('date', { ascending: true });
+      
+      return await withTimeout(query);
     });
 
     if (result.error) {
@@ -133,18 +133,18 @@ export const createEvent = async (event: Omit<Event, 'id' | 'archived' | 'demand
     console.log('🆕 Criando evento:', event.name);
     
     const result = await retryOperation(async () => {
-      return await withTimeout(
-        supabase
-          .from('events')
-          .insert({
-            name: event.name.trim(),
-            date: event.date.toISOString(),
-            logo: event.logo || null,
-            archived: false
-          })
-          .select()
-          .single()
-      );
+      const query = supabase
+        .from('events')
+        .insert({
+          name: event.name.trim(),
+          date: event.date.toISOString(),
+          logo: event.logo || null,
+          archived: false
+        })
+        .select()
+        .single();
+      
+      return await withTimeout(query);
     });
 
     if (result.error) {
@@ -188,12 +188,12 @@ export const updateEvent = async (id: string, event: Partial<Event>): Promise<vo
     }
     
     const result = await retryOperation(async () => {
-      return await withTimeout(
-        supabase
-          .from('events')
-          .update(updates)
-          .eq('id', id)
-      );
+      const query = supabase
+        .from('events')
+        .update(updates)
+        .eq('id', id);
+      
+      return await withTimeout(query);
     });
 
     if (result.error) {
@@ -213,12 +213,12 @@ export const deleteEvent = async (id: string): Promise<void> => {
     console.log('🗑️ Deletando evento:', id);
     
     const result = await retryOperation(async () => {
-      return await withTimeout(
-        supabase
-          .from('events')
-          .delete()
-          .eq('id', id)
-      );
+      const query = supabase
+        .from('events')
+        .delete()
+        .eq('id', id);
+      
+      return await withTimeout(query);
     });
 
     if (result.error) {
@@ -256,12 +256,12 @@ export const fetchDemands = async (forceRefresh = false): Promise<Demand[]> => {
     console.log('🔄 Carregando demandas...');
     
     const result = await retryOperation(async () => {
-      return await withTimeout(
-        supabase
-          .from('demands')
-          .select('*')
-          .order('date', { ascending: true })
-      );
+      const query = supabase
+        .from('demands')
+        .select('*')
+        .order('date', { ascending: true });
+      
+      return await withTimeout(query);
     });
 
     if (result.error) {
@@ -314,20 +314,20 @@ export const createDemand = async (demand: Omit<Demand, 'id' | 'completed' | 'ur
     }
 
     const result = await retryOperation(async () => {
-      return await withTimeout(
-        supabase
-          .from('demands')
-          .insert({
-            event_id: demand.eventId,
-            title: demand.title.trim(),
-            subject: demand.subject.trim(),
-            date: demand.date.toISOString(),
-            urgency,
-            completed: false
-          })
-          .select()
-          .single()
-      );
+      const query = supabase
+        .from('demands')
+        .insert({
+          event_id: demand.eventId,
+          title: demand.title.trim(),
+          subject: demand.subject.trim(),
+          date: demand.date.toISOString(),
+          urgency,
+          completed: false
+        })
+        .select()
+        .single();
+      
+      return await withTimeout(query);
     });
 
     if (result.error) {
@@ -395,12 +395,12 @@ export const updateDemand = async (id: string, demand: Partial<Demand>): Promise
     delete updates.id;
     
     const result = await retryOperation(async () => {
-      return await withTimeout(
-        supabase
-          .from('demands')
-          .update(updates)
-          .eq('id', id)
-      );
+      const query = supabase
+        .from('demands')
+        .update(updates)
+        .eq('id', id);
+      
+      return await withTimeout(query);
     });
 
     if (result.error) {
@@ -417,12 +417,12 @@ export const updateDemand = async (id: string, demand: Partial<Demand>): Promise
 export const deleteDemand = async (id: string): Promise<void> => {
   try {
     const result = await retryOperation(async () => {
-      return await withTimeout(
-        supabase
-          .from('demands')
-          .delete()
-          .eq('id', id)
-      );
+      const query = supabase
+        .from('demands')
+        .delete()
+        .eq('id', id);
+      
+      return await withTimeout(query);
     });
 
     if (result.error) {
@@ -459,12 +459,12 @@ export const fetchCRMRecords = async (forceRefresh = false): Promise<CRM[]> => {
     console.log('🔄 Carregando CRM...');
     
     const result = await retryOperation(async () => {
-      return await withTimeout(
-        supabase
-          .from('crm_records')
-          .select('*')
-          .order('date', { ascending: true })
-      );
+      const query = supabase
+        .from('crm_records')
+        .select('*')
+        .order('date', { ascending: true });
+      
+      return await withTimeout(query);
     });
 
     if (result.error) {
@@ -500,22 +500,22 @@ export const fetchCRMRecords = async (forceRefresh = false): Promise<CRM[]> => {
 export const createCRMRecord = async (crm: Omit<CRM, 'id'>): Promise<CRM> => {
   try {
     const result = await retryOperation(async () => {
-      return await withTimeout(
-        supabase
-          .from('crm_records')
-          .insert({
-            name: crm.name.trim(),
-            contact: crm.contact.trim(),
-            email: crm.email.trim(),
-            subject: crm.subject.trim(),
-            file: crm.file || null,
-            date: crm.date.toISOString(),
-            completed: crm.completed,
-            status: crm.status
-          })
-          .select()
-          .single()
-      );
+      const query = supabase
+        .from('crm_records')
+        .insert({
+          name: crm.name.trim(),
+          contact: crm.contact.trim(),
+          email: crm.email.trim(),
+          subject: crm.subject.trim(),
+          file: crm.file || null,
+          date: crm.date.toISOString(),
+          completed: crm.completed,
+          status: crm.status
+        })
+        .select()
+        .single();
+      
+      return await withTimeout(query);
     });
 
     if (result.error) {
@@ -569,12 +569,12 @@ export const updateCRMRecord = async (id: string, crm: Partial<CRM>): Promise<vo
     delete updates.id;
     
     const result = await retryOperation(async () => {
-      return await withTimeout(
-        supabase
-          .from('crm_records')
-          .update(updates)
-          .eq('id', id)
-      );
+      const query = supabase
+        .from('crm_records')
+        .update(updates)
+        .eq('id', id);
+      
+      return await withTimeout(query);
     });
 
     if (result.error) {
@@ -591,12 +591,12 @@ export const updateCRMRecord = async (id: string, crm: Partial<CRM>): Promise<vo
 export const deleteCRMRecord = async (id: string): Promise<void> => {
   try {
     const result = await retryOperation(async () => {
-      return await withTimeout(
-        supabase
-          .from('crm_records')
-          .delete()
-          .eq('id', id)
-      );
+      const query = supabase
+        .from('crm_records')
+        .delete()
+        .eq('id', id);
+      
+      return await withTimeout(query);
     });
 
     if (result.error) {
@@ -633,12 +633,12 @@ export const fetchNotes = async (forceRefresh = false): Promise<Note[]> => {
     console.log('🔄 Carregando notas...');
     
     const result = await retryOperation(async () => {
-      return await withTimeout(
-        supabase
-          .from('notes')
-          .select('*')
-          .order('date', { ascending: false })
-      );
+      const query = supabase
+        .from('notes')
+        .select('*')
+        .order('date', { ascending: false });
+      
+      return await withTimeout(query);
     });
 
     if (result.error) {
@@ -670,18 +670,18 @@ export const fetchNotes = async (forceRefresh = false): Promise<Note[]> => {
 export const createNote = async (note: Omit<Note, 'id'>): Promise<Note> => {
   try {
     const result = await retryOperation(async () => {
-      return await withTimeout(
-        supabase
-          .from('notes')
-          .insert({
-            title: note.title.trim(),
-            subject: note.subject.trim(),
-            date: note.date.toISOString(),
-            author: note.author
-          })
-          .select()
-          .single()
-      );
+      const query = supabase
+        .from('notes')
+        .insert({
+          title: note.title.trim(),
+          subject: note.subject.trim(),
+          date: note.date.toISOString(),
+          author: note.author
+        })
+        .select()
+        .single();
+      
+      return await withTimeout(query);
     });
 
     if (result.error) {
@@ -723,12 +723,12 @@ export const updateNote = async (id: string, note: Partial<Note>): Promise<void>
     delete updates.id;
     
     const result = await retryOperation(async () => {
-      return await withTimeout(
-        supabase
-          .from('notes')
-          .update(updates)
-          .eq('id', id)
-      );
+      const query = supabase
+        .from('notes')
+        .update(updates)
+        .eq('id', id);
+      
+      return await withTimeout(query);
     });
 
     if (result.error) {
@@ -745,12 +745,12 @@ export const updateNote = async (id: string, note: Partial<Note>): Promise<void>
 export const deleteNote = async (id: string): Promise<void> => {
   try {
     const result = await retryOperation(async () => {
-      return await withTimeout(
-        supabase
-          .from('notes')
-          .delete()
-          .eq('id', id)
-      );
+      const query = supabase
+        .from('notes')
+        .delete()
+        .eq('id', id);
+      
+      return await withTimeout(query);
     });
 
     if (result.error) {
@@ -857,13 +857,12 @@ export const invalidateCache = (type?: 'events' | 'demands' | 'crm' | 'notes') =
 // Função para verificar conectividade
 export const checkConnectivity = async (): Promise<boolean> => {
   try {
-    const { data, error } = await withTimeout(
-      supabase
-        .from('events')
-        .select('id')
-        .limit(1),
-      5000
-    );
+    const query = supabase
+      .from('events')
+      .select('id')
+      .limit(1);
+    
+    const { error } = await withTimeout(query, 5000);
     
     return !error;
   } catch (error) {
