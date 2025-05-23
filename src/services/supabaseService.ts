@@ -370,13 +370,13 @@ export const deleteNote = async (id: string): Promise<void> => {
   }
 };
 
-// Real-time subscription setup
+// Real-time subscription setup with proper channel configuration
 export const setupRealtimeSubscriptions = (onEventsChange: () => void, onDemandsChange: () => void, onCRMChange: () => void, onNotesChange: () => void) => {
   console.log('Setting up realtime subscriptions...');
   
-  // Enable real-time for events table
+  // Enable real-time for events table with unique channel names
   const eventsChannel = supabase
-    .channel('public:events')
+    .channel('events-changes')
     .on(
       'postgres_changes',
       { 
@@ -386,16 +386,23 @@ export const setupRealtimeSubscriptions = (onEventsChange: () => void, onDemands
       },
       (payload) => {
         console.log('Events realtime change received:', payload);
+        console.log('Event change type:', payload.eventType);
+        console.log('Event data:', payload.new || payload.old);
         onEventsChange();
       }
     )
     .subscribe((status) => {
-      console.log('Events channel status:', status);
+      console.log('Events channel subscription status:', status);
+      if (status === 'SUBSCRIBED') {
+        console.log('✅ Events real-time subscription active');
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        console.error('❌ Events real-time subscription failed:', status);
+      }
     });
 
-  // Enable real-time for demands table  
+  // Enable real-time for demands table with unique channel names
   const demandsChannel = supabase
-    .channel('public:demands')
+    .channel('demands-changes')
     .on(
       'postgres_changes',
       { 
@@ -405,16 +412,23 @@ export const setupRealtimeSubscriptions = (onEventsChange: () => void, onDemands
       },
       (payload) => {
         console.log('Demands realtime change received:', payload);
+        console.log('Demand change type:', payload.eventType);
+        console.log('Demand data:', payload.new || payload.old);
         onDemandsChange();
       }
     )
     .subscribe((status) => {
-      console.log('Demands channel status:', status);
+      console.log('Demands channel subscription status:', status);
+      if (status === 'SUBSCRIBED') {
+        console.log('✅ Demands real-time subscription active');
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        console.error('❌ Demands real-time subscription failed:', status);
+      }
     });
 
-  // Enable real-time for CRM records table
+  // Enable real-time for CRM records table with unique channel names
   const crmChannel = supabase
-    .channel('public:crm_records')
+    .channel('crm-changes')
     .on(
       'postgres_changes',
       { 
@@ -424,16 +438,23 @@ export const setupRealtimeSubscriptions = (onEventsChange: () => void, onDemands
       },
       (payload) => {
         console.log('CRM realtime change received:', payload);
+        console.log('CRM change type:', payload.eventType);
+        console.log('CRM data:', payload.new || payload.old);
         onCRMChange();
       }
     )
     .subscribe((status) => {
-      console.log('CRM channel status:', status);
+      console.log('CRM channel subscription status:', status);
+      if (status === 'SUBSCRIBED') {
+        console.log('✅ CRM real-time subscription active');
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        console.error('❌ CRM real-time subscription failed:', status);
+      }
     });
 
-  // Enable real-time for notes table
+  // Enable real-time for notes table with unique channel names
   const notesChannel = supabase
-    .channel('public:notes')
+    .channel('notes-changes')
     .on(
       'postgres_changes',
       { 
@@ -443,11 +464,18 @@ export const setupRealtimeSubscriptions = (onEventsChange: () => void, onDemands
       },
       (payload) => {
         console.log('Notes realtime change received:', payload);
+        console.log('Note change type:', payload.eventType);
+        console.log('Note data:', payload.new || payload.old);
         onNotesChange();
       }
     )
     .subscribe((status) => {
-      console.log('Notes channel status:', status);
+      console.log('Notes channel subscription status:', status);
+      if (status === 'SUBSCRIBED') {
+        console.log('✅ Notes real-time subscription active');
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        console.error('❌ Notes real-time subscription failed:', status);
+      }
     });
 
   // Return cleanup function to remove all channels
@@ -457,5 +485,6 @@ export const setupRealtimeSubscriptions = (onEventsChange: () => void, onDemands
     supabase.removeChannel(demandsChannel);
     supabase.removeChannel(crmChannel);
     supabase.removeChannel(notesChannel);
+    console.log('All real-time channels removed');
   };
 };

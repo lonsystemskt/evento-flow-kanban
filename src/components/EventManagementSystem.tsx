@@ -30,10 +30,10 @@ const EventManagementSystem = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  // Improved data loading function
+  // Improved data loading function with better error handling
   const loadAllData = async () => {
     try {
-      console.log('Loading all data...');
+      console.log('🔄 Loading all data...');
       setIsLoading(true);
       
       // Load events and demands in parallel
@@ -44,8 +44,10 @@ const EventManagementSystem = () => {
         fetchNotes()
       ]);
 
-      console.log('Events loaded:', eventsData.length);
-      console.log('Demands loaded:', demandsData.length);
+      console.log('✅ Events loaded:', eventsData.length);
+      console.log('✅ Demands loaded:', demandsData.length);
+      console.log('✅ CRM records loaded:', crmData.length);
+      console.log('✅ Notes loaded:', notesData.length);
 
       // Associate demands with their events
       const eventsWithDemands = eventsData.map(event => ({
@@ -58,7 +60,7 @@ const EventManagementSystem = () => {
       setNotes(notesData);
       
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('❌ Error loading data:', error);
       toast({
         title: "Erro",
         description: "Falha ao carregar dados. Tente novamente.",
@@ -74,14 +76,14 @@ const EventManagementSystem = () => {
     loadAllData();
   }, [toast]);
 
-  // Improved real-time subscriptions
+  // Enhanced real-time subscriptions with immediate updates
   useEffect(() => {
-    console.log('Setting up real-time subscriptions...');
+    console.log('🔌 Setting up real-time subscriptions...');
     
     const cleanup = setupRealtimeSubscriptions(
-      // Events change handler - reload events and demands
+      // Events change handler - reload events and demands immediately
       async () => {
-        console.log('Reloading events due to real-time change...');
+        console.log('🔄 Event change detected - reloading events...');
         try {
           const [eventsData, demandsData] = await Promise.all([
             fetchEvents(),
@@ -93,15 +95,22 @@ const EventManagementSystem = () => {
             demands: demandsData.filter(demand => demand.eventId === event.id)
           }));
           
-          console.log('Events updated via real-time:', eventsWithDemands.length);
+          console.log('✅ Events updated via real-time:', eventsWithDemands.length);
           setEvents(eventsWithDemands);
+          
+          // Show toast notification for event updates
+          toast({
+            title: "Atualização",
+            description: "Eventos atualizados em tempo real",
+            duration: 2000
+          });
         } catch (error) {
-          console.error('Error updating events in real-time:', error);
+          console.error('❌ Error updating events in real-time:', error);
         }
       },
-      // Demands change handler - reload demands for all events
+      // Demands change handler - reload demands for all events immediately
       async () => {
-        console.log('Reloading demands due to real-time change...');
+        console.log('🔄 Demand change detected - reloading demands...');
         try {
           const demandsData = await fetchDemands();
           
@@ -110,39 +119,60 @@ const EventManagementSystem = () => {
               ...event,
               demands: demandsData.filter(demand => demand.eventId === event.id)
             }));
-            console.log('Demands updated via real-time for events:', updatedEvents.length);
+            console.log('✅ Demands updated via real-time for events:', updatedEvents.length);
             return updatedEvents;
           });
+          
+          // Show toast notification for demand updates
+          toast({
+            title: "Atualização",
+            description: "Demandas atualizadas em tempo real",
+            duration: 2000
+          });
         } catch (error) {
-          console.error('Error updating demands in real-time:', error);
+          console.error('❌ Error updating demands in real-time:', error);
         }
       },
       // CRM change handler
       async () => {
-        console.log('Reloading CRM records due to real-time change...');
+        console.log('🔄 CRM change detected - reloading CRM records...');
         try {
           const crmData = await fetchCRMRecords();
-          console.log('CRM records updated via real-time:', crmData.length);
+          console.log('✅ CRM records updated via real-time:', crmData.length);
           setCrmRecords(crmData);
+          
+          // Show toast notification for CRM updates
+          toast({
+            title: "Atualização",
+            description: "Registros CRM atualizados em tempo real",
+            duration: 2000
+          });
         } catch (error) {
-          console.error('Error updating CRM records in real-time:', error);
+          console.error('❌ Error updating CRM records in real-time:', error);
         }
       },
       // Notes change handler
       async () => {
-        console.log('Reloading notes due to real-time change...');
+        console.log('🔄 Notes change detected - reloading notes...');
         try {
           const notesData = await fetchNotes();
-          console.log('Notes updated via real-time:', notesData.length);
+          console.log('✅ Notes updated via real-time:', notesData.length);
           setNotes(notesData);
+          
+          // Show toast notification for notes updates
+          toast({
+            title: "Atualização",
+            description: "Anotações atualizadas em tempo real",
+            duration: 2000
+          });
         } catch (error) {
-          console.error('Error updating notes in real-time:', error);
+          console.error('❌ Error updating notes in real-time:', error);
         }
       }
     );
 
     return cleanup;
-  }, []);
+  }, [toast]);
 
   // Current date and time string
   const getCurrentDateTime = () => {
@@ -153,10 +183,11 @@ const EventManagementSystem = () => {
     return `Bem-vindo! Hoje é ${day}, ${date} - ${time}`;
   };
 
-  // Event handlers
+  // Event handlers with immediate local updates
   const handleCreateEvent = async (eventData: Omit<Event, 'id' | 'archived' | 'demands'>) => {
     try {
       const newEvent = await createEvent(eventData);
+      // Immediate local update (real-time will also trigger)
       setEvents(prev => [...prev, { ...newEvent, demands: [] }]);
       setIsEventModalOpen(false);
       toast({
@@ -179,6 +210,7 @@ const EventManagementSystem = () => {
     try {
       await updateEvent(editingEvent.id, eventData);
       
+      // Immediate local update (real-time will also trigger)
       setEvents(prev => prev.map(event => 
         event.id === editingEvent.id 
           ? { ...event, ...eventData }
