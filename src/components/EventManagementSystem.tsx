@@ -30,83 +30,99 @@ const EventManagementSystem = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
+  // Improved data loading function
+  const loadAllData = async () => {
+    try {
+      console.log('Loading all data...');
+      setIsLoading(true);
+      
+      // Load events and demands in parallel
+      const [eventsData, demandsData, crmData, notesData] = await Promise.all([
+        fetchEvents(),
+        fetchDemands(),
+        fetchCRMRecords(),
+        fetchNotes()
+      ]);
+
+      console.log('Events loaded:', eventsData.length);
+      console.log('Demands loaded:', demandsData.length);
+
+      // Associate demands with their events
+      const eventsWithDemands = eventsData.map(event => ({
+        ...event,
+        demands: demandsData.filter(demand => demand.eventId === event.id)
+      }));
+
+      setEvents(eventsWithDemands);
+      setCrmRecords(crmData);
+      setNotes(notesData);
+      
+    } catch (error) {
+      console.error('Error loading data:', error);
+      toast({
+        title: "Erro",
+        description: "Falha ao carregar dados. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Initial data load
   useEffect(() => {
-    const loadAllData = async () => {
-      try {
-        setIsLoading(true);
-        
-        // Load events and demands
-        const eventsData = await fetchEvents();
-        const demandsData = await fetchDemands();
-
-        // Associate demands with their events
-        const eventsWithDemands = eventsData.map(event => ({
-          ...event,
-          demands: demandsData.filter(demand => demand.eventId === event.id)
-        }));
-
-        setEvents(eventsWithDemands);
-        
-        // Load CRM records
-        const crmData = await fetchCRMRecords();
-        setCrmRecords(crmData);
-        
-        // Load notes
-        const notesData = await fetchNotes();
-        setNotes(notesData);
-        
-      } catch (error) {
-        console.error('Error loading data:', error);
-        toast({
-          title: "Erro",
-          description: "Falha ao carregar dados. Tente novamente.",
-          variant: "destructive"
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     loadAllData();
   }, [toast]);
 
-  // Set up real-time subscriptions
+  // Improved real-time subscriptions
   useEffect(() => {
+    console.log('Setting up real-time subscriptions...');
+    
     const cleanup = setupRealtimeSubscriptions(
-      // Events change handler
+      // Events change handler - reload events and demands
       async () => {
+        console.log('Reloading events due to real-time change...');
         try {
-          const eventsData = await fetchEvents();
-          const demandsData = await fetchDemands();
+          const [eventsData, demandsData] = await Promise.all([
+            fetchEvents(),
+            fetchDemands()
+          ]);
           
           const eventsWithDemands = eventsData.map(event => ({
             ...event,
             demands: demandsData.filter(demand => demand.eventId === event.id)
           }));
           
+          console.log('Events updated via real-time:', eventsWithDemands.length);
           setEvents(eventsWithDemands);
         } catch (error) {
           console.error('Error updating events in real-time:', error);
         }
       },
-      // Demands change handler
+      // Demands change handler - reload demands for all events
       async () => {
+        console.log('Reloading demands due to real-time change...');
         try {
           const demandsData = await fetchDemands();
           
-          setEvents(prevEvents => prevEvents.map(event => ({
-            ...event,
-            demands: demandsData.filter(demand => demand.eventId === event.id)
-          })));
+          setEvents(prevEvents => {
+            const updatedEvents = prevEvents.map(event => ({
+              ...event,
+              demands: demandsData.filter(demand => demand.eventId === event.id)
+            }));
+            console.log('Demands updated via real-time for events:', updatedEvents.length);
+            return updatedEvents;
+          });
         } catch (error) {
           console.error('Error updating demands in real-time:', error);
         }
       },
       // CRM change handler
       async () => {
+        console.log('Reloading CRM records due to real-time change...');
         try {
           const crmData = await fetchCRMRecords();
+          console.log('CRM records updated via real-time:', crmData.length);
           setCrmRecords(crmData);
         } catch (error) {
           console.error('Error updating CRM records in real-time:', error);
@@ -114,8 +130,10 @@ const EventManagementSystem = () => {
       },
       // Notes change handler
       async () => {
+        console.log('Reloading notes due to real-time change...');
         try {
           const notesData = await fetchNotes();
+          console.log('Notes updated via real-time:', notesData.length);
           setNotes(notesData);
         } catch (error) {
           console.error('Error updating notes in real-time:', error);

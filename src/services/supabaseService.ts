@@ -372,60 +372,87 @@ export const deleteNote = async (id: string): Promise<void> => {
 
 // Real-time subscription setup
 export const setupRealtimeSubscriptions = (onEventsChange: () => void, onDemandsChange: () => void, onCRMChange: () => void, onNotesChange: () => void) => {
+  console.log('Setting up realtime subscriptions...');
+  
   // Enable real-time for events table
   const eventsChannel = supabase
-    .channel('events-changes')
+    .channel('public:events')
     .on(
       'postgres_changes',
-      { event: '*', schema: 'public', table: 'events' },
+      { 
+        event: '*', 
+        schema: 'public', 
+        table: 'events' 
+      },
       (payload) => {
-        console.log('Events change received:', payload);
+        console.log('Events realtime change received:', payload);
         onEventsChange();
       }
     )
-    .subscribe();
+    .subscribe((status) => {
+      console.log('Events channel status:', status);
+    });
 
   // Enable real-time for demands table  
   const demandsChannel = supabase
-    .channel('demands-changes')
+    .channel('public:demands')
     .on(
       'postgres_changes',
-      { event: '*', schema: 'public', table: 'demands' },
+      { 
+        event: '*', 
+        schema: 'public', 
+        table: 'demands' 
+      },
       (payload) => {
-        console.log('Demands change received:', payload);
+        console.log('Demands realtime change received:', payload);
         onDemandsChange();
       }
     )
-    .subscribe();
+    .subscribe((status) => {
+      console.log('Demands channel status:', status);
+    });
 
   // Enable real-time for CRM records table
   const crmChannel = supabase
-    .channel('crm-changes')
+    .channel('public:crm_records')
     .on(
       'postgres_changes',
-      { event: '*', schema: 'public', table: 'crm_records' },
+      { 
+        event: '*', 
+        schema: 'public', 
+        table: 'crm_records' 
+      },
       (payload) => {
-        console.log('CRM change received:', payload);
+        console.log('CRM realtime change received:', payload);
         onCRMChange();
       }
     )
-    .subscribe();
+    .subscribe((status) => {
+      console.log('CRM channel status:', status);
+    });
 
   // Enable real-time for notes table
   const notesChannel = supabase
-    .channel('notes-changes')
+    .channel('public:notes')
     .on(
       'postgres_changes',
-      { event: '*', schema: 'public', table: 'notes' },
+      { 
+        event: '*', 
+        schema: 'public', 
+        table: 'notes' 
+      },
       (payload) => {
-        console.log('Notes change received:', payload);
+        console.log('Notes realtime change received:', payload);
         onNotesChange();
       }
     )
-    .subscribe();
+    .subscribe((status) => {
+      console.log('Notes channel status:', status);
+    });
 
   // Return cleanup function to remove all channels
   return () => {
+    console.log('Cleaning up realtime subscriptions...');
     supabase.removeChannel(eventsChannel);
     supabase.removeChannel(demandsChannel);
     supabase.removeChannel(crmChannel);
