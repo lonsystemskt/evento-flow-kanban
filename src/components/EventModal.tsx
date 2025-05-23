@@ -22,6 +22,8 @@ const EventModal = ({ isOpen, onClose, onSave, editingEvent }: EventModalProps) 
   const [name, setName] = useState('');
   const [date, setDate] = useState<Date>();
   const [logo, setLogo] = useState<string>('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [errors, setErrors] = useState<{ name?: string; date?: string }>({});
 
   useEffect(() => {
     if (editingEvent) {
@@ -33,38 +35,83 @@ const EventModal = ({ isOpen, onClose, onSave, editingEvent }: EventModalProps) 
       setDate(undefined);
       setLogo('');
     }
+    setErrors({});
+    setIsSaving(false);
   }, [editingEvent, isOpen]);
 
-  const handleSave = () => {
-    if (!name.trim() || !date) return;
+  const validateForm = () => {
+    const newErrors: { name?: string; date?: string } = {};
+    
+    if (!name.trim()) {
+      newErrors.name = 'Nome do evento é obrigatório';
+    }
+    
+    if (!date) {
+      newErrors.date = 'Data do evento é obrigatória';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
-    onSave({
-      name: name.trim(),
-      date,
-      logo: logo || undefined
-    });
+  const handleSave = async () => {
+    if (!validateForm() || isSaving) return;
 
-    // Reset form only if not editing
-    if (!editingEvent) {
-      setName('');
-      setDate(undefined);
-      setLogo('');
+    try {
+      setIsSaving(true);
+      console.log('💾 Salvando evento:', { name: name.trim(), date, logo });
+      
+      await onSave({
+        name: name.trim(),
+        date: date!,
+        logo: logo || undefined
+      });
+
+      // Reset form only if not editing (creation mode)
+      if (!editingEvent) {
+        setName('');
+        setDate(undefined);
+        setLogo('');
+      }
+    } catch (error) {
+      console.error('❌ Erro ao salvar evento:', error);
+      // Error handling is done in the parent component
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      // Check file size (limit to 1MB to prevent database issues)
+      if (file.size > 1024 * 1024) {
+        alert('Arquivo muito grande. Máximo 1MB.');
+        return;
+      }
+      
       const reader = new FileReader();
       reader.onload = (e) => {
-        setLogo(e.target?.result as string);
+        const result = e.target?.result as string;
+        // Further limit base64 string size
+        if (result.length > 100000) {
+          alert('Imagem muito grande após conversão. Tente uma imagem menor.');
+          return;
+        }
+        setLogo(result);
       };
       reader.readAsDataURL(file);
     }
   };
 
+  const handleClose = () => {
+    if (!isSaving) {
+      onClose();
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">
@@ -78,10 +125,18 @@ const EventModal = ({ isOpen, onClose, onSave, editingEvent }: EventModalProps) 
             <Input
               id="name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                if (errors.name) setErrors(prev => ({ ...prev, name: undefined }));
+              }}
               placeholder="Digite o nome do evento"
-              className="w-full text-sm"
+              className={cn(
+                "w-full text-sm",
+                errors.name && "border-red-500"
+              )}
+              disabled={isSaving}
             />
+            {errors.name && <p className="text-red-500 text-xs">{errors.name}</p>}
           </div>
 
           <div className="space-y-2">
@@ -90,9 +145,11 @@ const EventModal = ({ isOpen, onClose, onSave, editingEvent }: EventModalProps) 
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
+                  disabled={isSaving}
                   className={cn(
                     "w-full justify-start text-left font-normal text-sm",
-                    !date && "text-muted-foreground"
+                    !date && "text-muted-foreground",
+                    errors.date && "border-red-500"
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
@@ -103,12 +160,16 @@ const EventModal = ({ isOpen, onClose, onSave, editingEvent }: EventModalProps) 
                 <Calendar
                   mode="single"
                   selected={date}
-                  onSelect={setDate}
+                  onSelect={(selectedDate) => {
+                    setDate(selectedDate);
+                    if (errors.date) setErrors(prev => ({ ...prev, date: undefined }));
+                  }}
                   initialFocus
                   className="pointer-events-auto"
                 />
               </PopoverContent>
             </Popover>
+            {errors.date && <p className="text-red-500 text-xs">{errors.date}</p>}
           </div>
 
           <div className="space-y-2">
@@ -128,29 +189,38 @@ const EventModal = ({ isOpen, onClose, onSave, editingEvent }: EventModalProps) 
                   onChange={handleLogoUpload}
                   className="hidden"
                   id="logo-upload"
+                  disabled={isSaving}
                 />
                 <Label
                   htmlFor="logo-upload"
-                  className="cursor-pointer inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+                  className={cn(
+                    "cursor-pointer inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors",
+                    isSaving && "opacity-50 cursor-not-allowed"
+                  )}
                 >
                   Escolher arquivo
                 </Label>
-                <p className="text-xs text-slate-500 mt-1">Formato circular preferencial</p>
+                <p className="text-xs text-slate-500 mt-1">Máximo 1MB - Formato circular preferencial</p>
               </div>
             </div>
           </div>
         </div>
 
         <div className="flex justify-end gap-3">
-          <Button variant="outline" onClick={onClose} className="text-sm">
+          <Button 
+            variant="outline" 
+            onClick={handleClose} 
+            className="text-sm"
+            disabled={isSaving}
+          >
             Cancelar
           </Button>
           <Button 
             onClick={handleSave}
-            disabled={!name.trim() || !date}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-sm"
+            disabled={!name.trim() || !date || isSaving}
+            className="bg-blue-600 hover:bg-blue-700 text-white text-sm disabled:opacity-50"
           >
-            Salvar
+            {isSaving ? 'Salvando...' : 'Salvar'}
           </Button>
         </div>
       </DialogContent>

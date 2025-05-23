@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus } from 'lucide-react';
@@ -28,20 +28,29 @@ const EventManagementSystem = () => {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [editingDemand, setEditingDemand] = useState<Demand | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isCreatingEvent, setIsCreatingEvent] = useState(false);
   const { toast } = useToast();
 
-  // Enhanced data loading function
-  const loadAllData = async () => {
+  // Enhanced data loading function with better error handling
+  const loadAllData = useCallback(async () => {
     try {
       console.log('🔄 Carregando todos os dados...');
       setIsLoading(true);
+      setError(null);
       
-      const [eventsData, demandsData, crmData, notesData] = await Promise.all([
-        fetchEvents(),
-        fetchDemands(),
-        fetchCRMRecords(),
-        fetchNotes()
-      ]);
+      // Load data sequentially to avoid overwhelming the database
+      console.log('📥 Loading events...');
+      const eventsData = await fetchEvents();
+      
+      console.log('📥 Loading demands...');
+      const demandsData = await fetchDemands();
+      
+      console.log('📥 Loading CRM records...');
+      const crmData = await fetchCRMRecords();
+      
+      console.log('📥 Loading notes...');
+      const notesData = await fetchNotes();
 
       console.log('✅ Dados carregados:', {
         eventos: eventsData.length,
@@ -62,6 +71,7 @@ const EventManagementSystem = () => {
       
     } catch (error) {
       console.error('❌ Erro ao carregar dados:', error);
+      setError('Falha ao carregar dados. Verifique sua conexão.');
       toast({
         title: "Erro",
         description: "Falha ao carregar dados. Tente novamente.",
@@ -70,14 +80,14 @@ const EventManagementSystem = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
 
   // Initial data load
   useEffect(() => {
     loadAllData();
-  }, [toast]);
+  }, [loadAllData]);
 
-  // Enhanced real-time subscriptions with immediate updates
+  // Enhanced real-time subscriptions with better error handling
   useEffect(() => {
     console.log('🔌 Configurando subscriptions em tempo real...');
     
@@ -102,7 +112,7 @@ const EventManagementSystem = () => {
           // Show toast notification
           toast({
             title: "Atualização",
-            description: "Eventos atualizados em tempo real",
+            description: "Eventos atualizados automaticamente",
             duration: 2000
           });
         } catch (error) {
@@ -126,7 +136,7 @@ const EventManagementSystem = () => {
           
           toast({
             title: "Atualização",
-            description: "Demandas atualizadas em tempo real",
+            description: "Demandas atualizadas automaticamente",
             duration: 2000
           });
         } catch (error) {
@@ -143,7 +153,7 @@ const EventManagementSystem = () => {
           
           toast({
             title: "Atualização",
-            description: "Registros CRM atualizados em tempo real",
+            description: "Registros CRM atualizados automaticamente",
             duration: 2000
           });
         } catch (error) {
@@ -160,7 +170,7 @@ const EventManagementSystem = () => {
           
           toast({
             title: "Atualização",
-            description: "Anotações atualizadas em tempo real",
+            description: "Anotações atualizadas automaticamente",
             duration: 2000
           });
         } catch (error) {
@@ -181,15 +191,26 @@ const EventManagementSystem = () => {
     return `Bem-vindo! Hoje é ${day}, ${date} - ${time}`;
   };
 
-  // Event handlers with enhanced logging
+  // Event handlers with enhanced loading states and error handling
   const handleCreateEvent = async (eventData: Omit<Event, 'id' | 'archived' | 'demands'>) => {
+    if (isCreatingEvent) {
+      console.log('⏳ Already creating event, skipping...');
+      return;
+    }
+    
     try {
+      setIsCreatingEvent(true);
       console.log('🆕 Criando novo evento:', eventData.name);
+      
       const newEvent = await createEvent(eventData);
       console.log('✅ Evento criado com sucesso:', newEvent.id);
       
-      // Don't update local state - real-time will handle it
+      // Update local state immediately for better UX
+      setEvents(prev => [...prev, { ...newEvent, demands: [] }]);
+      
       setIsEventModalOpen(false);
+      setEditingEvent(null);
+      
       toast({
         title: "Sucesso",
         description: "Evento criado com sucesso",
@@ -201,6 +222,8 @@ const EventManagementSystem = () => {
         description: "Falha ao criar evento. Tente novamente.",
         variant: "destructive"
       });
+    } finally {
+      setIsCreatingEvent(false);
     }
   };
 
@@ -209,18 +232,28 @@ const EventManagementSystem = () => {
     
     try {
       console.log('✏️ Editando evento:', editingEvent.id, eventData);
+      
+      // Update local state immediately for better UX
+      setEvents(prev => prev.map(event => 
+        event.id === editingEvent.id 
+          ? { ...event, ...eventData }
+          : event
+      ));
+      
       await updateEvent(editingEvent.id, eventData);
       console.log('✅ Evento editado com sucesso:', editingEvent.id);
       
-      // Don't update local state - real-time will handle it
       setEditingEvent(null);
       setIsEventModalOpen(false);
+      
       toast({
         title: "Sucesso",
         description: "Evento atualizado com sucesso",
       });
     } catch (error) {
       console.error('❌ Erro ao editar evento:', error);
+      // Revert local changes on error
+      loadAllData();
       toast({
         title: "Erro",
         description: "Falha ao atualizar evento. Tente novamente.",
@@ -520,7 +553,26 @@ const EventManagementSystem = () => {
       <div className="min-h-screen w-full pl-[30px] pr-[30px] pt-[25px] pb-0 bg-[#E4E9EF] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-xl font-medium text-[#2E3A59]">Carregando...</p>
+          <p className="text-xl font-medium text-[#2E3A59]">Carregando dados...</p>
+          {error && <p className="text-red-500 mt-2">{error}</p>}
+        </div>
+      </div>
+    );
+  }
+
+  if (error && events.length === 0) {
+    return (
+      <div className="min-h-screen w-full pl-[30px] pr-[30px] pt-[25px] pb-0 bg-[#E4E9EF] flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-6">⚠️</div>
+          <p className="text-xl font-medium text-[#2E3A59] mb-3">Erro ao carregar dados</p>
+          <p className="text-base text-[#2E3A59]/70 mb-6">{error}</p>
+          <Button 
+            onClick={loadAllData}
+            className="bg-gradient-to-r from-[#467BCA] to-[#77D1A8] hover:opacity-90 text-white px-6 py-3 rounded-xl"
+          >
+            Tentar Novamente
+          </Button>
         </div>
       </div>
     );
@@ -540,10 +592,11 @@ const EventManagementSystem = () => {
               setEditingEvent(null);
               setIsEventModalOpen(true);
             }}
-            className="bg-gradient-to-r from-[#467BCA] to-[#77D1A8] hover:opacity-90 text-white px-6 py-3 rounded-xl flex items-center gap-3 transition-all duration-200 text-base font-medium"
+            disabled={isCreatingEvent}
+            className="bg-gradient-to-r from-[#467BCA] to-[#77D1A8] hover:opacity-90 text-white px-6 py-3 rounded-xl flex items-center gap-3 transition-all duration-200 text-base font-medium disabled:opacity-50"
           >
             <Plus className="w-5 h-5" />
-            Novo Evento
+            {isCreatingEvent ? 'Criando...' : 'Novo Evento'}
           </Button>
         </header>
 
