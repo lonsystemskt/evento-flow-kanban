@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Wifi, WifiOff, RefreshCw } from 'lucide-react';
+import { Plus, Wifi, WifiOff, RefreshCw, Trash2 } from 'lucide-react';
 import { Event, Demand, CRM, Note, TabType } from '@/types/event';
 import EventModal from './EventModal';
 import EventRow from './EventRow';
@@ -322,6 +321,24 @@ const EventManagementSystem = React.memo(() => {
       toast({
         title: "❌ Erro",
         description: "Falha ao excluir demanda.",
+        variant: "destructive"
+      });
+    }
+  }, [toast, loadAllData]);
+
+  const handlePermanentDeleteDemand = useCallback(async (eventId: string, demandId: string) => {
+    try {
+      await deleteDemand(demandId);
+      toast({
+        title: "✅ Sucesso",
+        description: "Demanda excluída permanentemente",
+      });
+      await loadAllData(true, false);
+    } catch (error) {
+      console.error('❌ Erro ao excluir demanda permanentemente:', error);
+      toast({
+        title: "❌ Erro",
+        description: "Falha ao excluir demanda permanentemente.",
         variant: "destructive"
       });
     }
@@ -684,24 +701,58 @@ const EventManagementSystem = React.memo(() => {
           </TabsContent>
 
           <TabsContent value="completed">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="space-y-1">
               {completedDemands.map(demand => {
                 const event = events.find(e => e.id === demand.eventId);
                 return (
-                  <div key={demand.id} className="bg-[#F6F7FB] p-4 rounded-xl border border-[rgba(0,0,0,0.05)] transition-all duration-200">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-bold text-[#2E3A59] text-sm">{demand.title}</h3>
-                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <div key={demand.id} className="bg-gray-50/40 rounded-lg border border-gray-200/30 p-3 hover:bg-gray-50/60 transition-all duration-200">
+                    <div className="flex items-center gap-3">
+                      {/* Event Logo */}
+                      <div className="w-10 h-10 bg-gradient-to-br from-[#467BCA]/10 to-[#77D1A8]/10 rounded-full flex items-center justify-center flex-shrink-0 border border-gradient-to-r border-[#467BCA]/30 border-[#77D1A8]/30 shadow-sm">
+                        {event?.logo ? (
+                          <img src={event.logo} alt={event.name} className="w-10 h-10 rounded-full object-cover border border-gradient-to-r border-[#467BCA]/30 border-[#77D1A8]/30" />
+                        ) : (
+                          <span className="text-[#122A3A] font-bold text-sm">{event?.name?.charAt(0).toUpperCase()}</span>
+                        )}
+                      </div>
+
+                      {/* Event Name */}
+                      <div className="min-w-0 w-32 flex-shrink-0 text-left">
+                        <p className="text-sm font-medium text-[#122A3A] truncate">{event?.name}</p>
+                      </div>
+
+                      {/* Demand Info */}
+                      <div className="flex-1 min-w-0 text-left">
+                        <h4 className="font-semibold text-[#122A3A] text-sm mb-1 truncate">{demand.title}</h4>
+                        <p className="text-[#122A3A]/60 text-xs truncate">{demand.subject}</p>
+                      </div>
+
+                      {/* Date */}
+                      <div className="text-xs text-[#122A3A]/50 font-medium w-20 text-center flex-shrink-0">
+                        {demand.date.toLocaleDateString('pt-BR')}
+                      </div>
+
+                      {/* Completed Indicator */}
+                      <div className="w-3 h-3 bg-green-500 rounded-full flex-shrink-0"></div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handlePermanentDeleteDemand(demand.eventId, demand.id)}
+                          className="w-8 h-8 p-0 hover:bg-red-50 hover:text-red-600 rounded-md transition-colors duration-200"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          onClick={() => handleUpdateDemand(demand.eventId, demand.id, { completed: false })}
+                          className="bg-gradient-to-r from-[#467BCA] to-[#77D1A8] hover:opacity-90 text-white px-3 py-1 h-8 text-xs font-medium rounded-md transition-all duration-200 hover:scale-105"
+                        >
+                          Restaurar
+                        </Button>
+                      </div>
                     </div>
-                    <p className="text-sm text-[#2E3A59]/70 mb-3 line-clamp-2">{demand.subject}</p>
-                    <p className="text-xs text-[#2E3A59]/60 mb-1">{event?.name}</p>
-                    <p className="text-xs text-[#2E3A59]/60 mb-4">{demand.date.toLocaleDateString('pt-BR')}</p>
-                    <Button 
-                      onClick={() => handleUpdateDemand(demand.eventId, demand.id, { completed: false })}
-                      className="w-full text-xs h-8 bg-gradient-to-r from-[#467BCA] to-[#77D1A8] hover:opacity-90 text-white rounded-xl transition-all duration-200"
-                    >
-                      Restaurar
-                    </Button>
                   </div>
                 );
               })}
@@ -710,6 +761,7 @@ const EventManagementSystem = React.memo(() => {
                 <div className="col-span-full text-center py-16 bg-[#F6F7FB] rounded-xl border border-[rgba(0,0,0,0.05)]">
                   <div className="text-5xl mb-4">✅</div>
                   <p className="text-base font-medium text-[#2E3A59]">Nenhuma demanda concluída</p>
+                  <p className="text-base text-[#2E3A59]/70">Todas as demandas estão em andamento</p>
                 </div>
               )}
             </div>
